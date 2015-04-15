@@ -1,0 +1,110 @@
+<h4>{{ _('Control') }}</h4>
+
+<div style="min-height:15px; margin: 0px 16px; border:1px solid #00e500" id="base" data-bind="contextMenu: { menuSelector: '#controlContextMenu', menuSelected: $root.controlContextMenu }, visible: loginState.isUser">
+</div>
+											
+<div style="clear: both; display: none;" id="customControls" data-bind="visible: loginState.isUser, template: { name: $root.displayMode, foreach: controls }"></div>
+
+<ul id="controlContextMenu" class="dropdown-menu" role="menu" style="display:block;position:fixed !important;margin-bottom:5px;">
+	<li>
+		<a href="#" cmd="createContainer">Create Container</a>
+	</li>
+</ul>			
+<ul id="commandContextMenu" class="dropdown-menu" role="menu" style="display:block;position:fixed !important;margin-bottom:5px;">
+	<li><a href="#" cmd="editCommand">Edit Command</a></li>
+	<li><a href="#" cmd="deleteCommand">Delete Command</a></li>
+	<li class="divider"></li>
+	<li class="dropdown-submenu">
+		<a href="#">Style</a>
+		<ul class="dropdown-menu">
+			<li>
+				<a href="#" cmd="editStyle">Normal</a>
+			</li>
+			<li class="btn-primary">
+				<a href="#" cmd="editStyle">Primary</a>
+			</li>
+			<li class="btn-danger">
+				<a href="#" cmd="editStyle">Danger</a>
+			</li>
+			<li class="dropdown-submenu">
+				<a href="#">Custom</a>
+				<ul class="dropdown-menu">
+					<li><input type="text" placeholder="Background Color 1" cmd="editStyle"></input></li>
+					<li><input type="text" placeholder="Background Color 2" cmd="editStyle"></input></li>
+					<li><input type="text" placeholder="Foreground Color" cmd="editStyle"></input></li>
+				</ul>
+			</li>
+		</ul>
+	</li>
+</ul>
+<ul id="containerContextMenu" class="dropdown-menu" role="menu" style="display:block;position:fixed !important;margin-bottom:5px;">
+	<li class="dropdown-submenu">
+		<a href="#">Create Command</a>
+		<ul class="dropdown-menu">
+            <li><a href="#" cmd="createContainer">Create Container</a></li>
+			<li><a href="#" cmd="createCommand">Command</a></li>
+		</ul>
+	</li>
+	<li class="divider"></li>
+	<li><a href="#" cmd="editCommand">Edit Container</a></li>
+	<li><a href="#" cmd="deleteCommand">Delete Container</a></li>
+	<li class="divider"></li>
+	<li class="dropdown-submenu">
+		<a href="#">Style</a>
+		<ul class="dropdown-menu">
+			<li><input type="text" placeholder="Background Color 1" cmd="editStyle"></input></li>
+			<li><input type="text" placeholder="Background Color 2" cmd="editStyle"></input></li>
+			<li><input type="text" placeholder="Foreground Color" cmd="editStyle"></input></li>
+		</ul>
+	</li>
+</ul>
+
+<!-- Templates for custom controls -->
+<script type="text/html" id="settingsCustomControls_containerTemplate">
+    <div style="min-height:15px; margin: 8px 16px; padding: 8px 16px; border:1px dashed #000000" data-bind="contextMenu: { menuSelector: '#containerContextMenu', menuSelected: $root.controlContextMenu }, attr: { 'id': id }">
+        <!-- ko if: name -->
+        <h1 data-bind="text: name"></h1>
+        <!-- /ko -->
+
+        <!-- ko if: layout == 'vertical' -->
+        <div class="custom_section custom_section_vertical" data-bind="template: { name: $root.displayMode, foreach: children }"></div>
+        <!-- /ko -->
+
+        <!-- ko if: layout == 'horizontal' -->
+        <div class="custom_section custom_section_horizontal" data-bind="template: { name: $root.displayMode, foreach: children }"></div>
+        <!-- /ko -->
+
+        <!-- ko if: layout == 'horizontal_grid' -->
+        <div class="row-fluid custom_section custom_section_horizontal_grid">
+            <!-- ko foreach: children -->
+            <div data-bind="template: { name: $root.displayMode }, css: $root.rowCss($data)"></div>
+            <!-- /ko -->
+        </div>
+        <!-- /ko -->
+    </div>
+</script>
+<script type="text/html" id="settingsCustomControls_controlTemplate">
+    <form class="form-inline custom_control" style="min-height:15px; border:1px solid #000000" data-bind="contextMenu: { menuSelector: '#commandContextMenu', menuSelected: $root.controlContextMenu }, attr: { 'id': id }">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
+    </form>
+</script>
+<script type="text/html" id="customControls_controlTemplate_input">
+    <!-- ko foreach: input -->
+        <label data-bind="text: name"></label>
+        <!-- ko if: slider -->
+            <input type="number" style="width: 100px" data-bind="slider: {value: value, min: slider.min, max: slider.max, step: slider.step}">
+        <!-- /ko -->
+        <!-- ko ifnot: slider -->
+            <input type="text" class="input-small" data-bind="attr: {placeholder: name}, value: value">
+        <!-- /ko -->
+    <!-- /ko -->
+</script>
+<script type="text/html" id="customControls_controlTemplate_output">
+    <label data-bind="text: output"></label>
+</script>
+<script type="text/html" id="customControls_controlTemplate_command">
+    <button class="btn" data-bind="text: name, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }"></button>
+</script>
+<!-- End of templates for custom controls -->
