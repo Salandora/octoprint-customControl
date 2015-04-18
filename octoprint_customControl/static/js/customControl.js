@@ -51,6 +51,9 @@
         };
 
         self.rerenderControls = function () {
+
+            // TODO: Brainstorming about how to handle additionalControls...
+
             self.staticID = 0;
             self.controls(self._processControls(undefined, self.controlsFromServer))
         };
@@ -305,8 +308,8 @@
             self.recursiveDeleteProperties(self.controlsFromServer);
             self.settingsViewModel.settings.plugins.octoprint_customControl.controls = self.controlsFromServer;
         }
-        self.onSettingsAfterSave = function () {
-            self.controlViewModel.requestData();
+
+        self.onEventSettingsUpdated = function (payload) {
             self.requestData();
         }
     }

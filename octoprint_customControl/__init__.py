@@ -23,13 +23,14 @@ class CustomControlPlugin(octoprint.plugin.SettingsPlugin,
 		s.set(["controls"], data["controls"])
 
 	def get_assets(self):
-		return {
-			"js": [
+		return dict(
+			js=[
 				"js/customControl.js",
 				"js/containerDialog.js",
 			],
-			"css": ["css/customControls.css"]
-		}
+			css=["css/customControls.css"],
+			less=["less/customControls.css"]
+		)
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
