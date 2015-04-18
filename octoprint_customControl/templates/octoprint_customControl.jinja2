@@ -1,0 +1,39 @@
+﻿<div id="containerDialog" class="modal hide">
+    <div class="modal-header">
+        <h3>{{ _('Container Dialog') }}</h3>
+    </div>
+    <div class="modal-body">
+        <form class="form-horizontal" data-bind="with: element">
+            <div class="control-group">
+                <label class="control-label">{{ _('Name') }}</label>
+                <div class="controls">
+                    <input data-bind="value: name, valueAllowUnset: true"></input>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">{{ _('Layout') }}</label>
+                <div class="controls">
+                    <select data-bind="options: $parent.layouts, optionsText: 'name', optionsValue: 'key', value: layout, valueAllowUnset: false"></select>
+                </div>
+            </div>
+            <!-- ko if: $data.parent && $data.parent.layout && $data.parent.layout() == 'horizontal_grid' -->
+            <div class="control-group">
+                <label class="control-label">{{ _('Width') }}</label>
+                <div class="controls">
+                    <input data-bind="value: width, valueAllowUnset: false"></input>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">{{ _('Offset') }}</label>
+                <div class="controls">
+                    <input data-bind="value: offset, valueAllowUnset: true"></input>
+                </div>
+            </div>
+            <!-- /ko -->
+        </form>
+    </div>
+    <div class="modal-footer">
+        <a href="#" class="btn" data-dismiss="modal">{{ _('Cancel') }}</a>
+        <a href="#" class="btn btn-primary" data-dismiss="modal" aria-hidden="true">{{ _('Confirm') }}</a>
+    </div>
+</div>

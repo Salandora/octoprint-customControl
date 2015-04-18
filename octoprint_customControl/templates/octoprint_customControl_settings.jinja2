@@ -26,14 +26,6 @@
 			<li class="btn-danger">
 				<a href="#" cmd="editStyle">Danger</a>
 			</li>
-			<li class="dropdown-submenu">
-				<a href="#">Custom</a>
-				<ul class="dropdown-menu">
-					<li><input type="text" placeholder="Background Color 1" cmd="editStyle"></input></li>
-					<li><input type="text" placeholder="Background Color 2" cmd="editStyle"></input></li>
-					<li><input type="text" placeholder="Foreground Color" cmd="editStyle"></input></li>
-				</ul>
-			</li>
 		</ul>
 	</li>
 </ul>
@@ -46,35 +38,26 @@
 		</ul>
 	</li>
 	<li class="divider"></li>
-	<li><a href="#" cmd="editCommand">Edit Container</a></li>
-	<li><a href="#" cmd="deleteCommand">Delete Container</a></li>
-	<li class="divider"></li>
-	<li class="dropdown-submenu">
-		<a href="#">Style</a>
-		<ul class="dropdown-menu">
-			<li><input type="text" placeholder="Background Color 1" cmd="editStyle"></input></li>
-			<li><input type="text" placeholder="Background Color 2" cmd="editStyle"></input></li>
-			<li><input type="text" placeholder="Foreground Color" cmd="editStyle"></input></li>
-		</ul>
-	</li>
+	<li><a href="#" cmd="editContainer">Edit Container</a></li>
+	<li><a href="#" cmd="deleteContainer">Delete Container</a></li>
 </ul>
 
 <!-- Templates for custom controls -->
 <script type="text/html" id="settingsCustomControls_containerTemplate">
-    <div style="min-height:15px; margin: 8px 16px; padding: 8px 16px; border:1px dashed #000000" data-bind="contextMenu: { menuSelector: '#containerContextMenu', menuSelected: $root.controlContextMenu }, attr: { 'id': id }">
+    <div class="custom_container" data-bind="contextMenu: { menuSelector: '#containerContextMenu', menuSelected: $root.controlContextMenu }, attr: { 'id': id }, css: { 'custom_section_vertical_section': !($parent && $parent.layout && $parent.layout() == 'horizontal'), 'custom_section_horizontal_section': $parent && $parent.layout && $parent.layout() == 'horizontal' }">
         <!-- ko if: name -->
         <h1 data-bind="text: name"></h1>
         <!-- /ko -->
 
-        <!-- ko if: layout == 'vertical' -->
+        <!-- ko if: layout() == 'vertical' -->
         <div class="custom_section custom_section_vertical" data-bind="template: { name: $root.displayMode, foreach: children }"></div>
         <!-- /ko -->
 
-        <!-- ko if: layout == 'horizontal' -->
+        <!-- ko if: layout() == 'horizontal' -->
         <div class="custom_section custom_section_horizontal" data-bind="template: { name: $root.displayMode, foreach: children }"></div>
         <!-- /ko -->
 
-        <!-- ko if: layout == 'horizontal_grid' -->
+        <!-- ko if: layout() == 'horizontal_grid' -->
         <div class="row-fluid custom_section custom_section_horizontal_grid">
             <!-- ko foreach: children -->
             <div data-bind="template: { name: $root.displayMode }, css: $root.rowCss($data)"></div>
@@ -84,7 +67,7 @@
     </div>
 </script>
 <script type="text/html" id="settingsCustomControls_controlTemplate">
-    <form class="form-inline custom_control" style="min-height:15px; border:1px solid #000000" data-bind="contextMenu: { menuSelector: '#commandContextMenu', menuSelected: $root.controlContextMenu }, attr: { 'id': id }">
+    <form class="form-inline control-tab custom_control" style="min-height:15px; border:1px solid #000000" data-bind="contextMenu: { menuSelector: '#commandContextMenu', menuSelected: $root.controlContextMenu }, attr: { 'id': id }">
         <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
         <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } --><!-- /ko -->
         <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
