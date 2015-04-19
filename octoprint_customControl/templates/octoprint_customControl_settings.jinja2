@@ -7,12 +7,12 @@
 
 <ul id="controlContextMenu" class="dropdown-menu" role="menu" style="display:block;position:fixed !important;margin-bottom:5px;">
 	<li>
-		<a href="#" cmd="createContainer">Create Container</a>
+		<a href="#" cmd="createContainer">{{ _('Create Container') }}</a>
 	</li>
 </ul>			
 <ul id="commandContextMenu" class="dropdown-menu" role="menu" style="display:block;position:fixed !important;margin-bottom:5px;">
-	<li><a href="#" cmd="editCommand">Edit Command</a></li>
-	<li><a href="#" cmd="deleteCommand">Delete Command</a></li>
+	<li><a href="#" cmd="editElement">{{ _('Edit') }}</a></li>
+	<li><a href="#" cmd="deleteElement">{{ _('Delete') }}</a></li>
 	<li class="divider"></li>
 	<li class="dropdown-submenu">
 		<a href="#">Style</a>
@@ -33,13 +33,14 @@
 	<li class="dropdown-submenu">
 		<a href="#">Create Command</a>
 		<ul class="dropdown-menu">
-            <li><a href="#" cmd="createContainer">Create Container</a></li>
-			<li><a href="#" cmd="createCommand">Command</a></li>
+            <li><a href="#" cmd="createContainer">{{ _('Container') }}</a></li>
+			<li><a href="#" cmd="createCommand">{{ _('Command') }}</a></li>
+			<li><a href="#" cmd="createOutput">{{ _('Output') }}</a></li>
 		</ul>
 	</li>
 	<li class="divider"></li>
-	<li><a href="#" cmd="editContainer">Edit Container</a></li>
-	<li><a href="#" cmd="deleteContainer">Delete Container</a></li>
+	<li><a href="#" cmd="editElement">{{ _('Edit') }}</a></li>
+	<li><a href="#" cmd="deleteElement">{{ _('Delete') }}</a></li>
 </ul>
 
 <!-- Templates for custom controls -->
@@ -67,7 +68,7 @@
     </div>
 </script>
 <script type="text/html" id="settingsCustomControls_controlTemplate">
-    <form class="form-inline control-tab custom_control" style="min-height:15px; border:1px solid #000000" data-bind="contextMenu: { menuSelector: '#commandContextMenu', menuSelected: $root.controlContextMenu }, attr: { 'id': id }">
+    <form class="form-inline control-tab custom_control" style="min-height:15px; border:1px dotted #000000" data-bind="contextMenu: { menuSelector: '#commandContextMenu', menuSelected: $root.controlContextMenu }, attr: { 'id': id }">
         <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
         <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } --><!-- /ko -->
         <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
@@ -88,6 +89,6 @@
     <label data-bind="text: output"></label>
 </script>
 <script type="text/html" id="customControls_controlTemplate_command">
-    <button class="btn" data-bind="text: name, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }"></button>
+    <button class="btn" data-bind="text: name }"></button>
 </script>
 <!-- End of templates for custom controls -->

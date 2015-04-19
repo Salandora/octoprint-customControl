@@ -5,7 +5,8 @@
         self.loginState = parameters[0];
         self.settingsViewModel = parameters[1];
         self.controlViewModel = parameters[2];
-        self.containerDialogViewModel = parameters[3];
+
+        self.customControlDialogViewModel = parameters[3];
 
         self.popup = undefined;
 
@@ -65,12 +66,38 @@
             return controls;
         };
 
+        self._processInput = function (control) {
+            for (var i = 0; i < control.input.length; i++) {
+                if (!control.processed) {
+                    control.input[i].value = ko.observable(control.input[i].default);
+                    control.input[i].default = ko.observable(control.input[i].default);
+                }
+
+                if (control.processed)
+                    control.input[i].value(control.input[i].default());
+
+                if (!control.input[i].hasOwnProperty("slider"))
+                    control.input[i].slider = ko.observable(false);
+                else if (!control.processed)
+                    control.input[i].slider = ko.observable(control.input[i].slider);
+            }
+        }
         self._processControl = function (parent, control) {
             control.id = ko.observable("settingsCustomControl_id" + self.staticID++);
             control.parent = parent;
 
-            if (control.hasOwnProperty("template") && control.hasOwnProperty("key") && control.hasOwnProperty("template_key") && !control.hasOwnProperty("output"))
-                control.output = ko.observable("");
+            if (control.hasOwnProperty("template") && control.hasOwnProperty("regex")) {
+                if (control.processed) {
+                    control.template(control.template());
+                    control.regex(control.regex());
+                }
+                else {
+                    control.template = ko.observable(control.template);
+                    control.regex = ko.observable(control.regex);
+
+                    control.output = ko.computed(function () { return control.template(); });
+                }
+            }
 
             if (control.hasOwnProperty("children")) {
                 if (control.processed) {
@@ -87,27 +114,19 @@
                         control.layout = ko.observable("vertical");
                     else
                         control.layout = ko.observable(control.layout);
-
-                    control.width = ko.observable(control.hasOwnProperty("width") ? control.width : "2");
-                    control.offset = ko.observable(control.hasOwnProperty("offset") ? control.offset : "");
                 }
+            }
+            
+            if (!control.processed) {
+                if (control.hasOwnProperty("name"))
+                    control.name = ko.observable(control.name);
+
+                control.width = ko.observable(control.hasOwnProperty("width") ? control.width : "2");
+                control.offset = ko.observable(control.hasOwnProperty("offset") ? control.offset : "");
             }
 
             if (control.hasOwnProperty("input")) {
-                for (var i = 0; i < control.input.length; i++) {
-                    if (!control.processed) {
-                        control.input[i].value = ko.observable(control.input[i].default);
-                        control.input[i].default = ko.observable(control.input[i].default);
-                    }
-
-                    if (control.processed)
-                        control.input[i].value(control.input[i].default());
-
-                    if (!control.input[i].hasOwnProperty("slider"))
-                        control.input[i].slider = ko.observable(false);
-                    else if (!control.processed)
-                        control.input[i].slider = ko.observable(control.input[i].slider);
-                }
+                self._processInput(control);
             }
 
             var js;
@@ -173,114 +192,179 @@
             return undefined;
         }
 
+        self.createElement = function (invokedOn, contextParent, selectedMenu) {
+            if (invokedOn.attr('id') == "base") {
+                self.customControlDialogViewModel.show(function (ret) {
+                    self.controlsFromServer.push(ret);
+                    self.rerenderControls();
+                });
+            }
+            else {
+                var parentElement = self.searchElement(self.controlsFromServer, contextParent.attr('id'));
+                if (parentElement == undefined) {
+                    self._showPopup({
+                        title: gettext("Something went wrong while creating the new Element"),
+                        type: "error"
+                    });
+                    return;
+                }
+
+                self.customControlDialogViewModel.show(function (ret) {
+                    parentElement.children.push(self._processControl(parentElement, ret));
+                });
+            }
+        }
+        self.deleteElement = function (invokedOn, contextParent, selectedMenu) {
+            var element = self.searchElement(self.controlsFromServer, contextParent.attr('id'));
+            if (element == undefined) {
+                self._showPopup({
+                    title: gettext("Something went wrong while creating the new Element"),
+                    type: "error"
+                });
+                return;
+            }
+
+            showConfirmationDialog("", function (e) {
+                if (element.parent != undefined)
+                    element.parent.children.remove(element);
+                else {
+                    self.controlsFromServer = _.without(self.controlsFromServer, element);
+                    self.rerenderControls();
+                }
+            });
+        }
+        self.editElement = function (invokedOn, contextParent, selectedMenu) {
+            var element = self.searchElement(self.controlsFromServer, contextParent.attr('id'));
+            if (element == undefined) {
+                self._showPopup({
+                    title: gettext("Something went wrong while creating the new Element"),
+                    type: "error"
+                });
+                return;
+            }
+
+            var title = "Edit Container";
+            var type = "container";
+            var data = {
+                parent: element.parent,
+            };
+
+            if (element.hasOwnProperty("name"))
+                data.name = element.name();
+            if (element.hasOwnProperty("layout")) {
+                data.layout = element.layout();
+                title = "Edit Container";
+                type = "container";
+            }
+            if (element.hasOwnProperty("command")) {
+                data.commands = element.command;
+                title = "Edit Command";
+                type = "command";
+            }
+            if (element.hasOwnProperty("commands")) {
+                data.commands = element.commands;
+                title = "Edit Command";
+                type = "command";
+            }
+            if (element.hasOwnProperty("input"))
+            {
+                data.input = [];
+                _.each(element.input(), function (element, index, list) {
+                    data.input[index] = ko.mapping.toJS(element);
+                });
+            }
+            if (element.hasOwnProperty("template")) {
+                data.template = element.template();
+                title = "Edit Output";
+                type = "output";
+            }
+            if (element.hasOwnProperty("regex"))
+                data.regex = element.regex();
+
+            if (element.hasOwnProperty("width"))
+                data.width = element.width();
+            if (element.hasOwnProperty("offset"))
+                data.offset = element.offset();
+
+            self.customControlDialogViewModel.reset(data);
+            self.customControlDialogViewModel.title(gettext(title));
+            self.customControlDialogViewModel.type(type);
+
+            self.customControlDialogViewModel.show(function (ret) {
+                switch (self.customControlDialogViewModel.type()) {
+                    case "container": {
+                        element.name(ret.name);
+                        element.layout(ret.layout);
+                    }
+                    case "command": {
+                        if (ret.hasOwnProperty("name"))
+                            element.name(ret.name);
+
+                        delete element.command;
+                        delete element.commands;
+                        delete element.input;
+
+                        if (ret.command != undefined)
+                            element.command = ret.command;
+                        if (ret.commands != undefined)
+                            element.commands = ret.commands;
+
+                        if (ret.input != undefined) {
+                            element.input = ret.input;
+                            self._processInput(element);
+                        }
+                        break;
+                    }
+                    case "output": {
+                        element.template(ret.template);
+                        element.regex(ret.regex);
+                    }
+                }
+
+                if (element.parent.layout() == "horizontal_grid") {
+                    if (ret.width != undefined && ret.width != "")
+                        element.width(ret.width);
+
+                    if (ret.offset != undefined && ret.offset != "")
+                        element.offset(ret.offset);
+                }
+            });
+        }
+
         self.controlContextMenu = function (invokedOn, contextParent, selectedMenu)
         {
             switch (selectedMenu.attr('cmd')) {
                 case "createContainer": {
-                    if (invokedOn.attr('id') == "base") {
-                        self.containerDialogViewModel.element({
-                            name: undefined,
-                            children:[],
-                            layout: "vertical",
-                            width: "2",
-                            offset: ""
-                        });
+                    self.customControlDialogViewModel.reset();
+                    self.customControlDialogViewModel.title(gettext("Create container"));
+                    self.customControlDialogViewModel.type("container");
 
-                        self.containerDialogViewModel.show(function (e) {
-                            self.controlsFromServer.push(self.containerDialogViewModel.element());
-                            self.rerenderControls();
-                        });
-                    }
-                    else {
-                        var parentElement = self.searchElement(self.controlsFromServer, contextParent.attr('id'));
-                        if (parentElement == undefined) {
-                            self._showPopup({
-                                title: gettext("Something went wrong while creating the new Element"),
-                                type:"error"
-                            });
-                            return;
-                        }
-
-                        self.containerDialogViewModel.element({
-                            parent: parentElement,
-                            name: undefined,
-                            children: [],
-                            layout: "vertical",
-                            width: "2",
-                            offset: ""
-                        });
-
-                        self.containerDialogViewModel.show(function (e) {
-                            parentElement.children.push(self._processControl(parentElement, self.containerDialogViewModel.element()));
-                        });
-                    }
+                    self.createElement(invokedOn, contextParent, selectedMenu);
                     break;
                 }
-                case "editContainer": {
-                    var element = self.searchElement(self.controlsFromServer, contextParent.attr('id'));
-                    if (element == undefined) {
-                        self._showPopup({
-                            title: gettext("Something went wrong while creating the new Element"),
-                            type: "error"
-                        });
-                        return;
-                    }
+                case "createCommand": {
+                    self.customControlDialogViewModel.reset();
+                    self.customControlDialogViewModel.title(gettext("Create Command"));
+                    self.customControlDialogViewModel.type("command");
 
-                    var dialog = $('#containerDialog');
-                    var primarybtn = $('.btn-primary', dialog);
-
-                    var el = {
-                        parent: element.parent,
-                        name: ko.observable(element.name()),
-                        layout: ko.observable(element.layout()),
-                        width: ko.observable("2"),
-                        offset: ko.observable("")
-                    };
-                    if (element.hasOwnProperty("width"))
-                        el.width(element.width());
-                    if (element.hasOwnProperty("offset"))
-                        el.offset(element.offset());
-
-                    self.containerDialogViewModel.element(el);
-                    primarybtn.unbind('click').bind('click', function (e) {
-                        var ele = self.containerDialogViewModel.element();
-
-                        element.name(ele.name());
-                        element.layout(ele.layout());
-                        if (ele.parent.layout() == "horizontal_grid") {
-                            if (ele.width() != undefined)
-                                element.width(ele.width());
-
-                            if (ele.offset() != undefined)
-                                element.offset(ele.offset());
-                        }
-                    });
-
-                    dialog.modal({
-                        show: 'true',
-                        backdrop: 'static',
-                        keyboard: false
-                    });
+                    self.createElement(invokedOn, contextParent, selectedMenu);
                     break;
                 }
-                case "deleteContainer": {
-                    var element = self.searchElement(self.controlsFromServer, contextParent.attr('id'));
-                    if (element == undefined) {
-                        self._showPopup({
-                            title: gettext("Something went wrong while creating the new Element"),
-                            type: "error"
-                        });
-                        return;
-                    }
+                case "createOutput": {
+                    self.customControlDialogViewModel.reset();
+                    self.customControlDialogViewModel.title(gettext("Create Output"));
+                    self.customControlDialogViewModel.type("output");
 
-                    showConfirmationDialog("", function (e) {
-                        if (element.parent != undefined)
-                            element.parent.children.remove(element);
-                        else {
-                            self.controlsFromServer = _.without(self.controlsFromServer, element);
-                            self.rerenderControls();
-                        }
-                    });
+                    self.createElement(invokedOn, contextParent, selectedMenu);
+                    break;
+                }
+                case "deleteElement": {
+                    self.deleteElement(invokedOn, contextParent, selectedMenu);
+                    break;
+                }
+                case "editElement": {
+                    self.editElement(invokedOn, contextParent, selectedMenu);
+                    break;
                 }
             }
         }
@@ -299,6 +383,7 @@
                 delete list[i].id;
                 delete list[i].parent;
                 delete list[i].processed;
+                delete list[i].output;
 
                 if (list[i].hasOwnProperty("children"))
                      self.recursiveDeleteProperties(list[i].children());
@@ -317,7 +402,7 @@
     // view model class, parameters for constructor, container to bind to
     OCTOPRINT_VIEWMODELS.push([
         CustomControlViewModel,
-        ["loginStateViewModel", "settingsViewModel", "controlViewModel", "containerDialogViewModel"],
+        ["loginStateViewModel", "settingsViewModel", "controlViewModel", "customControlDialogViewModel"],
         "#settings_plugin_octoprint_customControl"
     ]);
 });

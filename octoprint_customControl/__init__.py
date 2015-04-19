@@ -26,10 +26,10 @@ class CustomControlPlugin(octoprint.plugin.SettingsPlugin,
 		return dict(
 			js=[
 				"js/customControl.js",
-				"js/containerDialog.js",
+				"js/customControlDialog.js",
 			],
 			css=["css/customControls.css"],
-			less=["less/customControls.css"]
+			less=["less/customControls.less"]
 		)
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
