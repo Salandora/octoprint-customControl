@@ -94,8 +94,6 @@
                 else {
                     control.template = ko.observable(control.template);
                     control.regex = ko.observable(control.regex);
-
-                    control.output = ko.computed(function () { return control.template(); });
                 }
             }
 
@@ -108,7 +106,6 @@
                         control.layout = ko.observable("vertical");
                 }
                 else {
-                    control.name = ko.observable(control.name);
                     control.children = ko.observableArray(self._processControls(control, control.children));
                     if (!control.hasOwnProperty("layout") || !(control.layout == "vertical" || control.layout == "horizontal" || control.layout == "horizontal_grid"))
                         control.layout = ko.observable("vertical");
