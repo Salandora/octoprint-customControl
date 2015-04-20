@@ -2,22 +2,7 @@
     function customControlDialogViewModel(parameters) {
         var self = this;
 
-        self.element = ko.observable(ko.mapping.fromJS({
-            name: undefined,
-            commands: "",
-            script: "",
-            javascript: "",
-            enabled: "",
-            children: [],
-            input: [],
-            layout: "vertical",
-            regex: "",
-            template: "",
-            confirm: "",
-            width: "2",
-            offset: "",
-            parent: undefined
-        }));
+        self.element = ko.observable();
 
         self.title = ko.observable(gettext("Create Container"));
         self.type = ko.observable("container");
@@ -67,7 +52,9 @@
         self.reset = function (data) {
             var element = {
                 name: undefined,
+                collapsable: true,
                 commands: "",
+                deflt: "",
                 script: "",
                 javascript: "",
                 enabled: "",
@@ -99,6 +86,9 @@
                     case "container": {
                         el.name = obj.name;
                         el.layout = obj.layout;
+                        if (obj.name != "")
+                            el.collapsable = obj.collapsable;
+
                         el.children = [];
 
                         el.width = obj.width;
@@ -142,6 +132,7 @@
                     case "output": {
                         el.template = obj.template;
                         el.regex = obj.regex;
+                        el.deflt = obj.deflt;
 
                         el.width = obj.width;
                         el.offset = obj.offset;

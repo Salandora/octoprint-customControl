@@ -1,6 +1,6 @@
 <h4>{{ _('Control') }}</h4>
 
-<div style="min-height:15px; margin: 0px 16px; border:1px solid #00e500" id="base" data-bind="contextMenu: { menuSelector: '#controlContextMenu', menuSelected: $root.controlContextMenu }, visible: loginState.isUser">
+<div style="min-height:15px; margin: 16px 16px; border:1px solid #00e500" id="base" data-bind="contextMenu: { menuSelector: '#controlContextMenu', menuSelected: $root.controlContextMenu }, visible: loginState.isUser">
 </div>
 											
 <div style="clear: both; display: none;" id="customControls" data-bind="visible: loginState.isUser, template: { name: $root.displayMode, foreach: controls }"></div>
@@ -45,11 +45,7 @@
 
 <!-- Templates for custom controls -->
 <script type="text/html" id="settingsCustomControls_containerTemplate">
-    <div class="custom_container" data-bind="contextMenu: { menuSelector: '#containerContextMenu', menuSelected: $root.controlContextMenu }, attr: { 'id': id }, css: { 'custom_section_vertical_section': !($parent && $parent.layout && $parent.layout() == 'horizontal'), 'custom_section_horizontal_section': $parent && $parent.layout && $parent.layout() == 'horizontal' }">
-        <!-- ko if: name -->
-        <h1 data-bind="text: name"></h1>
-        <!-- /ko -->
-
+    <div class="custom_container custom_section_vertical_section" data-bind="contextMenu: { menuSelector: '#containerContextMenu', menuSelected: $root.controlContextMenu }, attr: { 'id': id }, css: { 'custom_section_horizontal_section': $parent && $parent.layout == 'horizontal' }">
         <!-- ko if: layout() == 'vertical' -->
         <div class="custom_section custom_section_vertical" data-bind="template: { name: $root.displayMode, foreach: children }"></div>
         <!-- /ko -->
@@ -67,11 +63,40 @@
         <!-- /ko -->
     </div>
 </script>
+<script type="text/html" id="settingsCustomControls_containerTemplate_accordion">
+    <div class="custom_container accordion-group" data-bind="contextMenu: { menuSelector: '#containerContextMenu', menuSelected: $root.controlContextMenu }, attr: { 'id': id }, css: { 'custom_section_horizontal_section': ($parent && $parent.layout && $parent.layout() == 'horizontal') }">
+        <!-- ko if: name -->
+        <div class="accordion-heading">
+            <a class="accordion-toggle" style="display: block; text-decoration: none" data-bind="style: { 'cursor': collapsable() ? '' : 'default' }, attr: { 'data-target': collapsable() ? '#toggle_' + id() : '', 'data-toggle': collapsable() ? 'collapse' : '', 'onclick':  collapsable() ? '$(this).children().toggleClass(\'icon-caret-down icon-caret-right\')' : '' }">
+                <h1 data-bind="text: name, css: { 'icon-caret-down': collapsable }"></h1>
+            </a>
+        </div>
+        <!-- /ko -->
+
+        <!-- ko if: layout -->
+        <div class="accordion-body" data-bind="attr: { 'id': 'toggle_' + id() }, css: { 'collapse in': collapsable }">
+            <!-- ko if: layout() == 'vertical' -->
+            <div class="custom_section custom_section_vertical accordion-inner" data-bind="template: { name: $root.displayMode, foreach: children }"></div>
+            <!-- /ko -->
+            <!-- ko if: layout() == 'horizontal' -->
+            <div class="custom_section custom_section_horizontal accordion-inner" data-bind="template: { name: $root.displayMode, foreach: children }"></div>
+            <!-- /ko -->
+            <!-- ko if: layout() == 'horizontal_grid' -->
+            <div class="row-fluid custom_section custom_section_horizontal_grid accordion-inner">
+                <!-- ko foreach: children -->
+                <div data-bind="template: { name: $root.displayMode }, css: $root.rowCss($data)"></div>
+                <!-- /ko -->
+            </div>
+            <!-- /ko -->
+        </div>
+        <!-- /ko -->
+    </div>
+</script>
 <script type="text/html" id="settingsCustomControls_controlTemplate">
     <form class="form-inline control-tab custom_control" style="min-height:15px; border:1px dotted #000000" data-bind="contextMenu: { menuSelector: '#commandContextMenu', menuSelected: $root.controlContextMenu }, attr: { 'id': id }">
         <!-- ko template: { name: 'settingsCustomControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
         <!-- ko template: { name: 'settingsCustomControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } --><!-- /ko -->
-        <!-- ko template: { name: 'settingsCustomControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('template') } --><!-- /ko -->
+        <!-- ko template: { name: 'settingsCustomControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('deflt') } --><!-- /ko -->
     </form>
 </script>
 <script type="text/html" id="settingsCustomControls_controlTemplate_input">
@@ -86,7 +111,7 @@
     <!-- /ko -->
 </script>
 <script type="text/html" id="settingsCustomControls_controlTemplate_output">
-    <label style="cursor: default" data-bind="text: template"></label>
+    <label style="cursor: default" data-bind="text: deflt"></label>
 </script>
 <script type="text/html" id="settingsCustomControls_controlTemplate_command">
     <button class="btn" data-bind="text: name"></button>

@@ -8,7 +8,7 @@
             <div class="control-group">
                 <label class="control-label">{{ _('Name') }}</label>
                 <div class="controls">
-                    <input data-bind="value: name, valueAllowUnset: true"></input>
+                    <input style="width: 97%" data-bind="value: name, valueAllowUnset: true"></input>
                 </div>
             </div>
             <!-- /ko -->
@@ -19,13 +19,13 @@
                     <select data-bind="options: $root.layouts, optionsText: 'name', optionsValue: 'key', value: layout, valueAllowUnset: false"></select>
                 </div>
             </div>
+            <!-- ko if: name && name() != "" -->
+            <div class="control-group">
+                <label class="control-label"><input type="checkbox" data-bind="checked: collapsable"></input>{{ _('Make Collapsable') }}</label>
+            </div>
             <!-- /ko -->
-            <!--<div class="control-group">
-                <label class="control-label">{{ _('Type') }}</label>
-                <div class="controls">
-                    <select data-bind="options: $root.types, optionsText: 'name', optionsValue: 'key', value: $root.type, valueAllowUnset: false"></select>
-                </div>
-            </div>-->
+            <!-- /ko -->
+
             <!-- ko if: $root.type() == "command" -->
             <div class="control-group">
                 <label class="control-label">{{ _('Commands') }}</label>
@@ -76,13 +76,19 @@
             <div class="control-group">
                 <label class="control-label">{{ _('Regex') }}</label>
                 <div class="controls">
-                    <input data-bind="value: regex"></input>
+                    <input style="width: 97%" data-bind="value: regex"></input>
                 </div>
             </div>
             <div class="control-group">
                 <label class="control-label">{{ _('Template') }}</label>
                 <div class="controls">
-                    <textarea style="width: 97%; height: auto" data-bind="value: template"></textarea>
+                    <input style="width: 97%" data-bind="value: template"></input>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">{{ _('Default Message') }}</label>
+                <div class="controls">
+                    <input style="width: 97%" data-bind="value: deflt"></input>
                 </div>
             </div>
             <!-- /ko -->

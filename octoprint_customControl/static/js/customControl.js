@@ -86,15 +86,10 @@
             control.id = ko.observable("settingsCustomControl_id" + self.staticID++);
             control.parent = parent;
 
-            if (control.hasOwnProperty("template") && control.hasOwnProperty("regex")) {
-                if (control.processed) {
-                    control.template(control.template());
-                    control.regex(control.regex());
-                }
-                else {
-                    control.template = ko.observable(control.template);
-                    control.regex = ko.observable(control.regex);
-                }
+            if (control.hasOwnProperty("template") && control.hasOwnProperty("regex") && control.hasOwnProperty("deflt")) {
+                control.template = ko.observable(control.template);
+                control.regex = ko.observable(control.regex);
+                control.deflt = ko.observable(control.deflt);
             }
 
             if (control.hasOwnProperty("children")) {
@@ -102,8 +97,11 @@
                     control.children(self._processControls(control, control.children()));
                     if (control.hasOwnProperty("layout") && !(control.layout() == "vertical" || control.layout() == "horizontal" || control.layout() == "horizontal_grid"))
                         control.layout("vertical");
-                    else if (!control.hasOwnProperty("layout"))
-                        control.layout = ko.observable("vertical");
+
+                    if (control.hasOwnProperty("name") && control.name() != "") {
+                        if (!control.hasOwnProperty("collapsable"))
+                            control.collapsable = ko.observable(false);
+                    }
                 }
                 else {
                     control.children = ko.observableArray(self._processControls(control, control.children));
@@ -111,12 +109,21 @@
                         control.layout = ko.observable("vertical");
                     else
                         control.layout = ko.observable(control.layout);
+
+                    if (control.hasOwnProperty("name") && control.name != "") {
+                        if (control.hasOwnProperty("collapsable"))
+                            control.collapsable = ko.observable(control.collapsable);
+                        else
+                            control.collapsable = ko.observable(false);
+                    }
                 }
             }
             
             if (!control.processed) {
                 if (control.hasOwnProperty("name"))
                     control.name = ko.observable(control.name);
+                else
+                    control.name = ko.observable("");
 
                 control.width = ko.observable(control.hasOwnProperty("width") ? control.width : "2");
                 control.offset = ko.observable(control.hasOwnProperty("offset") ? control.offset : "");
@@ -155,7 +162,7 @@
 
         self.displayMode = function (customControl) {
             if (customControl.hasOwnProperty("children")) {
-                return "settingsCustomControls_containerTemplate";
+                return (customControl.hasOwnProperty("name") && customControl.name() != "") ? "settingsCustomControls_containerTemplate_accordion" : "settingsCustomControls_containerTemplate";
             } else {
                 return "settingsCustomControls_controlTemplate";
             }
@@ -231,7 +238,7 @@
             });
         }
         self.editElement = function (invokedOn, contextParent, selectedMenu) {
-            var element = self.searchElement(self.controlsFromServer, contextParent.attr('id'));
+            var element = self.element = self.searchElement(self.controlsFromServer, contextParent.attr('id'));
             if (element == undefined) {
                 self._showPopup({
                     title: gettext("Something went wrong while creating the new Element"),
@@ -246,8 +253,10 @@
                 parent: element.parent,
             };
 
-            if (element.hasOwnProperty("name"))
+            if (element.hasOwnProperty("name")) {
                 data.name = element.name();
+                data.collapsable = element.hasOwnProperty("collapsable") ? element.collapsable() : false;
+            }
             if (element.hasOwnProperty("layout")) {
                 data.layout = element.layout();
                 title = "Edit Container";
@@ -277,6 +286,8 @@
             }
             if (element.hasOwnProperty("regex"))
                 data.regex = element.regex();
+            if (element.hasOwnProperty("deflt"))
+                data.deflt = element.deflt();
 
             if (element.hasOwnProperty("width"))
                 data.width = element.width();
@@ -288,10 +299,47 @@
             self.customControlDialogViewModel.type(type);
 
             self.customControlDialogViewModel.show(function (ret) {
+                var element = self.element;
+
                 switch (self.customControlDialogViewModel.type()) {
                     case "container": {
-                        element.name(ret.name);
+                        if (ret.hasOwnProperty("name"))
+                            element.name(ret.name);
+                           
                         element.layout(ret.layout);
+
+                        if (ret.hasOwnProperty("collapsable") != "") {
+                            if (element.hasOwnProperty("collapsable")) {
+                                if (!ret.collapsable) {
+                                    var e = $('#toggle_' + element.id());
+                                    if (e)
+                                        e.height("auto");
+
+                                    e = $('#' + element.id() + ' div.accordion-heading a h1');
+                                    if (e)
+                                        e.removeClass('icon-caret-right');
+                                }
+
+                                element.collapsable(ret.collapsable);
+                            }
+                            else
+                                element.collapsable = ko.observable(ret.collapsable);
+                        }
+                        else {
+                            if (element.hasOwnProperty("collapsable")) {
+                                element.collapsable(false);
+                                delete element.collapsable;
+                            }
+
+                            var e = $('#toggle_' + element.id());
+                            if (e)
+                                e.height("auto");
+
+                            e = $('#' + element.id() + ' div.accordion-heading a h1');
+                            if (e)
+                                e.removeClass('icon-caret-right');
+                        }
+                        break;
                     }
                     case "command": {
                         if (ret.hasOwnProperty("name"))
@@ -315,10 +363,12 @@
                     case "output": {
                         element.template(ret.template);
                         element.regex(ret.regex);
+                        element.deflt(ret.deflt);
+                        break;
                     }
                 }
 
-                if (element.parent.layout() == "horizontal_grid") {
+                if (element.parent && element.parent.layout() == "horizontal_grid") {
                     if (ret.width != undefined && ret.width != "")
                         element.width(ret.width);
 
@@ -371,7 +421,7 @@
        
         self.recursiveDeleteProperties = function (list) {
             for (var i = 0; i < list.length; i++) {
-                if (list[i].parent && list[i].parent.hasOwnProperty("layout") && list[i].parent.layout() != "horizontal_grid")
+                if (!list[i].parent || (list[i].parent.hasOwnProperty("layout") && list[i].parent.layout() != "horizontal_grid"))
                 {
                     delete list[i].width;
                     delete list[i].offset;
@@ -381,6 +431,18 @@
                 delete list[i].parent;
                 delete list[i].processed;
                 delete list[i].output;
+                delete list[i].key;
+                delete list[i].template_key;
+
+                if (list[i].hasOwnProperty("width") && list[i].width() == "")
+                    delete list[i].width;
+                if (list[i].hasOwnProperty("offset") && list[i].offset() == "")
+                    delete list[i].offset;
+
+                if (!list[i].hasOwnProperty("name") || list[i].name() == "") {
+                    delete list[i].name;
+                    delete list[i].collapsable;
+                }
 
                 if (list[i].hasOwnProperty("children"))
                      self.recursiveDeleteProperties(list[i].children());
