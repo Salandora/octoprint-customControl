@@ -66,30 +66,34 @@
             return controls;
         };
 
-        self._processInput = function (control) {
-            for (var i = 0; i < control.input.length; i++) {
-                if (!control.processed) {
-                    control.input[i].value = ko.observable(control.input[i].default);
-                    control.input[i].default = ko.observable(control.input[i].default);
-                }
+        self._processInput = function (list) {
+            var inputs = [];
 
-                if (control.processed)
-                    control.input[i].value(control.input[i].default());
+            for (var i = 0; i < list.length; i++) {
+                var input = {
+                    name: ko.observable(list[i].name),
+                    parameter: ko.observable(list[i].parameter),
+                    defaultValue: ko.observable(list[i].defaultValue)
+                };
 
-                if (!control.input[i].hasOwnProperty("slider"))
-                    control.input[i].slider = ko.observable(false);
-                else if (!control.processed)
-                    control.input[i].slider = ko.observable(control.input[i].slider);
+                if (list[i].hasOwnProperty("slider") && typeof list[i].slider == "object")
+                    input.slider = ko.mapping.fromJS(list[i].slider);
+                else
+                    input.slider = false;
+
+                inputs.push(input);
             }
+
+            return inputs;
         }
         self._processControl = function (parent, control) {
             control.id = ko.observable("settingsCustomControl_id" + self.staticID++);
             control.parent = parent;
 
-            if (control.hasOwnProperty("template") && control.hasOwnProperty("regex") && control.hasOwnProperty("deflt")) {
+            if (control.hasOwnProperty("template") && control.hasOwnProperty("regex") && control.hasOwnProperty("defaultValue")) {
                 control.template = ko.observable(control.template);
                 control.regex = ko.observable(control.regex);
-                control.deflt = ko.observable(control.deflt);
+                control.defaultValue = ko.observable(control.defaultValue);
             }
 
             if (control.hasOwnProperty("children")) {
@@ -130,7 +134,10 @@
             }
 
             if (control.hasOwnProperty("input")) {
-                self._processInput(control);
+                if (control.processed)
+                    control.input(self._processInput(control.input()));
+                else
+                    control.input = ko.observableArray(self._processInput(control.input));
             }
 
             var js;
@@ -198,6 +205,8 @@
 
         self.createElement = function (invokedOn, contextParent, selectedMenu) {
             if (invokedOn.attr('id') == "base") {
+                self.customControlDialogViewModel.reset();
+
                 self.customControlDialogViewModel.show(function (ret) {
                     self.controlsFromServer.push(ret);
                     self.rerenderControls();
@@ -212,6 +221,8 @@
                     });
                     return;
                 }
+
+                self.customControlDialogViewModel.reset({ parent: parentElement });
 
                 self.customControlDialogViewModel.show(function (ret) {
                     parentElement.children.push(self._processControl(parentElement, ret));
@@ -286,8 +297,8 @@
             }
             if (element.hasOwnProperty("regex"))
                 data.regex = element.regex();
-            if (element.hasOwnProperty("deflt"))
-                data.deflt = element.deflt();
+            if (element.hasOwnProperty("defaultValue"))
+                data.defaultValue = element.defaultValue();
 
             if (element.hasOwnProperty("width"))
                 data.width = element.width();
@@ -347,7 +358,6 @@
 
                         delete element.command;
                         delete element.commands;
-                        delete element.input;
 
                         if (ret.command != undefined)
                             element.command = ret.command;
@@ -355,9 +365,10 @@
                             element.commands = ret.commands;
 
                         if (ret.input != undefined) {
-                            element.input = ret.input;
-                            self._processInput(element);
+                            element.input(self._processInput(ret.input));
                         }
+                        else
+                            delete element.input;
                         break;
                     }
                     case "output": {
@@ -382,7 +393,6 @@
         {
             switch (selectedMenu.attr('cmd')) {
                 case "createContainer": {
-                    self.customControlDialogViewModel.reset();
                     self.customControlDialogViewModel.title(gettext("Create container"));
                     self.customControlDialogViewModel.type("container");
 
@@ -390,7 +400,6 @@
                     break;
                 }
                 case "createCommand": {
-                    self.customControlDialogViewModel.reset();
                     self.customControlDialogViewModel.title(gettext("Create Command"));
                     self.customControlDialogViewModel.type("command");
 
@@ -398,7 +407,6 @@
                     break;
                 }
                 case "createOutput": {
-                    self.customControlDialogViewModel.reset();
                     self.customControlDialogViewModel.title(gettext("Create Output"));
                     self.customControlDialogViewModel.type("output");
 

@@ -26,10 +26,14 @@
             if (self.element() == undefined || self.element().input == undefined)
                 return false;
 
-            _.each(self.element().input(), function (element, index, list) {
-                if (element.hasOwnProperty("slider"))
-                    return true;
-            });
+            var inputs = self.element().input()
+            for(var i = 0; i < inputs.length; i++)    
+            {
+                if (inputs[i].hasOwnProperty("slider")) {
+                    if (typeof inputs[i].slider == "object")
+                        return true;
+                }
+            }
             return false;
         });
         self.span = function(parameter) {
@@ -54,7 +58,7 @@
                 name: undefined,
                 collapsable: true,
                 commands: "",
-                deflt: "",
+                defaultValue: "",
                 script: "",
                 javascript: "",
                 enabled: "",
@@ -71,12 +75,21 @@
             if (typeof data == "object")
                 element = _.extend(element, data);
 
-            self.element(ko.mapping.fromJS(element));
-        }
+            var mapped = ko.mapping.fromJS(element);
+            if (data.hasOwnProperty("input")) {
+                self.useInputs(true);
 
+                //_.each(mapped.input(), function (e, index, list) {
+                //    if (e.hasOwnProperty("slider") && !$.isFunction(e.slider))
+                //        e.slider = ko.observable(e.slider);
+                //});
+            }
+
+            self.element(mapped);
+        }
         self.show = function (f) {
             var dialog = $("#customControlDialog");
-            var primarybtn = $('.btn-primary', dialog);
+            var primarybtn = $('div.modal-footer .btn-primary', dialog);
 
             primarybtn.unbind('click').bind('click', function (e) {
                 var obj = ko.mapping.toJS(self.element());
@@ -112,9 +125,9 @@
                                 var input = {
                                     name: element.name,
                                     parameter: element.parameter,
-                                    default: element.default
+                                    defaultValue: element.defaultValue
                                 };
-                                if (element.hasOwnProperty("slider")) {
+                                if (element.hasOwnProperty("slider") && element.slider != false) {
                                     input["slider"] = {
                                     };
 
@@ -125,6 +138,8 @@
                                     if (element.slider.hasOwnProperty("step") && element.slider.step != "")
                                         input.slider.step = element.slider.step;
                                 }
+
+                                el.input.push(input);
                             });
                         }
                         break;
@@ -132,7 +147,7 @@
                     case "output": {
                         el.template = obj.template;
                         el.regex = obj.regex;
-                        el.deflt = obj.deflt;
+                        el.defaultValue = obj.defaultValue;
 
                         el.width = obj.width;
                         el.offset = obj.offset;
@@ -148,6 +163,34 @@
                 backdrop: 'static',
                 keyboard: false
             });
+        }
+
+        self.removeInput = function (data) {
+            self.element().input.remove(data);
+        }
+        self.addInput = function () {
+            var obj = {
+                name: ko.observable(""),
+                parameter: ko.observable(""),
+                defaultValue: ko.observable(""),
+                slider: false
+            }
+
+            self.element().input.push(obj);
+        }
+        self.addSliderInput = function () {
+            var obj = {
+                name: ko.observable(""),
+                parameter: ko.observable(""),
+                defaultValue: ko.observable(""),
+                slider: {
+                    min: ko.observable(""),
+                    max: ko.observable(""),
+                    step: ko.observable("")
+                }
+            }
+
+            self.element().input.push(obj);
         }
     }
 
