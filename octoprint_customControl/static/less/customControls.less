@@ -1,29 +1,39 @@
 ﻿#customControls {
-    .custom_section_horizontal {
+    .custom_section_horizontal .custom_control {
         display:inline-block;
+    }
+    .custom_section_vertical .custom_control {
+        display:block;
     }
     .custom_section_vertical_section {
         min-width:15px; 
-        min-height:15px; 
-
-        margin: 8px 8px; 
-        padding: 8px 8px; 
+        min-height:15px;
         
         border:1px dashed #000000;
     }
-    .custom_section_horizontal_section {
-        float:left;
+
+    .slider.slider-disabled .slider-track {
+        cursor: default !important;
     }
-    .accordion-toggle h1 {
-        display: block;
-        width: 100%;
-        padding: 0;
-        margin-bottom: 20px;
-        font-size: 21px;
-        line-height: 40px;
-        color: #333;
-        border: 0;
-        border-bottom: 1px solid #E5E5E5;
-        font-weight: normal;
+
+    input[disabled] {
+        background: #fff !important;
+        cursor: text !important;
+    }
+
+    .custom_section {
+        h1 {
+            cursor: pointer;
+            display: block;
+            width: 100%;
+            padding: 0;
+            margin-bottom: 20px;
+            font-size: 21px;
+            line-height: 40px;
+            color: #333;
+            border: 0;
+            border-bottom: 1px solid #E5E5E5;
+            font-weight: normal;
+        }
     }
 }

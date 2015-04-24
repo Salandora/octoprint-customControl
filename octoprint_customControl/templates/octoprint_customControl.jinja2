@@ -4,7 +4,7 @@
     </div>
     <div class="modal-body">
         <form class="form-horizontal" data-bind="with: element">
-            <!-- ko if: $root.type() == "command" || $root.type() == "container" -->
+            <!-- ko if: $root.type() == "command" || $root.type() == "script" || $root.type() == "container" -->
             <div class="control-group">
                 <label class="control-label">{{ _('Name') }}</label>
                 <div class="controls">
@@ -21,11 +21,12 @@
             </div>
             <!-- ko if: name && name() != "" -->
             <div class="control-group">
-                <label class="control-label"><input type="checkbox" data-bind="checked: collapsable"></input>{{ _('Make Collapsable') }}</label>
+                <label class="control-label"><input type="checkbox" data-bind="checked: collapsed"></input>{{ _('Make Collapsed') }}</label>
             </div>
             <!-- /ko -->
             <!-- /ko -->
 
+            <!-- ko if: $root.type() == "command" || $root.type() == "script" -->
             <!-- ko if: $root.type() == "command" -->
             <div class="control-group">
                 <label class="control-label">{{ _('Commands') }}</label>
@@ -33,9 +34,32 @@
                     <textarea style="width: 97%; height: auto" data-bind="value: commands"></textarea>
                 </div>
             </div>
+            <!-- /ko -->
+            <!-- ko if: $root.type() == "script" -->
+            <div class="control-group">
+                <label class="control-label">{{ _('Script') }}</label>
+                <div class="controls">
+                    <input style="width: 97%" data-bind="value: script"></input>
+                </div>
+            </div>
+            <!-- /ko -->
 
             <div class="control-group">
-                <label class="control-label"><input type="checkbox" data-bind="checked: $parent.useInputs"></input>{{ _('Use Inputs') }}</label>
+                <label class="control-label"><input type="checkbox" data-bind="checked: $root.useConfirm"></input>{{ _('Use Confirmation') }}</label>
+            </div>
+            <!-- ko if: $root.useConfirm() -->
+            <div class="control-group">
+                <label class="control-label">{{ _('Message') }}</label>
+                <div class="controls">
+                    <input style="width: 97%" data-bind="value: confirm"></input>
+                </div>
+            </div>
+            <!-- /ko -->
+            <!-- /ko -->
+
+            <!-- ko if: $root.type() == "command" || $root.type() == "script"-->
+            <div class="control-group">
+                <label class="control-label"><input type="checkbox" data-bind="checked: $root.useInputs"></input>{{ _('Use Inputs') }}</label>
             </div>
             <!-- ko if: $root.useInputs -->
             <div class="control-group">
@@ -56,11 +80,14 @@
                     <div class="row-fluid" style="margin-bottom: 5px">
                         <div data-bind="css: $root.span('name')"><input class="span12" data-bind="value: name"></input></div>
                         <div data-bind="css: $root.span('parameter')"><input class="span12" data-bind="value: parameter"></input></div>
+                        <!-- ko ifnot: slider -->
                         <div data-bind="css: $root.span('default')"><input class="span12" data-bind="value: defaultValue"></input></div>
+                        <!-- /ko -->
                         <!-- ko if: slider -->
-                        <div class="span2"><input class="span12" data-bind="value: slider.min"></input></div>
-                        <div class="span2"><input class="span12" data-bind="value: slider.max"></input></div>
-                        <div class="span1"><input class="span12" data-bind="value: slider.step"></input></div>
+                        <div class="span2"><input type="number" class="span12" data-bind="value: defaultValue"></input></div>
+                        <div class="span2"><input type="number" class="span12" data-bind="value: slider.min"></input></div>
+                        <div class="span2"><input type="number" class="span12" data-bind="value: slider.max"></input></div>
+                        <div class="span1"><input type="number" class="span12" data-bind="value: slider.step"></input></div>
                         <div class="span1"><a href="#" title="Remove Input" class="btn btn-danger" data-bind="click: $root.removeInput"><i class="icon-trash"></i></a></div>
                         <!-- /ko -->
                         <div class="span1" data-bind="ifnot: slider, css: { 'offset5': $root.hasSlider() }"><a href="#" title="Remove Input" class="btn btn-danger" data-bind="click: $root.removeInput"><i class="icon-trash"></i></a></div>
@@ -74,7 +101,11 @@
             <!-- /ko -->
             <!-- /ko -->
 
-            <!-- ko if: $root.type() == "output" -->
+            <!-- ko if: $root.type() == "command" -->
+            <div class="control-group">
+                <label class="control-label"><input type="checkbox" data-bind="checked: $root.useOutput"></input>{{ _('Use Output') }}</label>
+            </div>
+            <!-- ko if: $root.type() == "output" || ($root.type() == "command" && $root.useOutput()) -->
             <div class="control-group">
                 <label class="control-label">{{ _('Regex') }}</label>
                 <div class="controls">
@@ -93,6 +124,7 @@
                     <input style="width: 97%" data-bind="value: defaultValue"></input>
                 </div>
             </div>
+            <!-- /ko -->
             <!-- /ko -->
 
             <!-- ko if: $data.parent && $data.parent.layout && $data.parent.layout() == 'horizontal_grid' -->

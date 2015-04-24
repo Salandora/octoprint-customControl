@@ -31,7 +31,7 @@
             }
         };
 
-        self.onStartup = function () {
+        self.onSettingsShown = function () {
             self.requestData();
         };
 
@@ -73,13 +73,19 @@
                 var input = {
                     name: ko.observable(list[i].name),
                     parameter: ko.observable(list[i].parameter),
-                    defaultValue: ko.observable(list[i].defaultValue)
+                    defaultValue: ko.observable(list[i].defaultValue || "0")
                 };
 
-                if (list[i].hasOwnProperty("slider") && typeof list[i].slider == "object")
-                    input.slider = ko.mapping.fromJS(list[i].slider);
-                else
+                if (list[i].hasOwnProperty("slider") && typeof list[i].slider == "object") {
+                    input.slider = {
+                        min: ko.observable(list[i].slider.min),
+                        max: ko.observable(list[i].slider.max),
+                        step: ko.observable(list[i].slider.step),
+                    }
+                }
+                else {
                     input.slider = false;
+                }
 
                 inputs.push(input);
             }
@@ -87,58 +93,49 @@
             return inputs;
         }
         self._processControl = function (parent, control) {
-            control.id = ko.observable("settingsCustomControl_id" + self.staticID++);
+            if (control.processed) {
+                control.id("settingsCustomControl_id" + self.staticID++);
+            }
+            else {
+                control.id = ko.observable("settingsCustomControl_id" + self.staticID++);
+            }
             control.parent = parent;
 
-            if (control.hasOwnProperty("template") && control.hasOwnProperty("regex") && control.hasOwnProperty("defaultValue")) {
+            if (control.processed) {
+                if (control.hasOwnProperty("children")) {
+                    control.children(self._processControls(control, control.children()));
+                }
+
+                return control;
+            }
+
+            if (control.hasOwnProperty("template") && control.hasOwnProperty("regex")) {
                 control.template = ko.observable(control.template);
                 control.regex = ko.observable(control.regex);
-                control.defaultValue = ko.observable(control.defaultValue);
+                control.defaultValue = ko.observable(control.defaultValue || "");
             }
 
             if (control.hasOwnProperty("children")) {
-                if (control.processed) {
-                    control.children(self._processControls(control, control.children()));
-                    if (control.hasOwnProperty("layout") && !(control.layout() == "vertical" || control.layout() == "horizontal" || control.layout() == "horizontal_grid"))
-                        control.layout("vertical");
+                control.children = ko.observableArray(self._processControls(control, control.children));
+                if (!control.hasOwnProperty("layout") || !(control.layout == "vertical" || control.layout == "horizontal" || control.layout == "horizontal_grid"))
+                    control.layout = ko.observable("vertical");
+                else
+                    control.layout = ko.observable(control.layout);
 
-                    if (control.hasOwnProperty("name") && control.name() != "") {
-                        if (!control.hasOwnProperty("collapsable"))
-                            control.collapsable = ko.observable(false);
-                    }
-                }
-                else {
-                    control.children = ko.observableArray(self._processControls(control, control.children));
-                    if (!control.hasOwnProperty("layout") || !(control.layout == "vertical" || control.layout == "horizontal" || control.layout == "horizontal_grid"))
-                        control.layout = ko.observable("vertical");
-                    else
-                        control.layout = ko.observable(control.layout);
-
-                    if (control.hasOwnProperty("name") && control.name != "") {
-                        if (control.hasOwnProperty("collapsable"))
-                            control.collapsable = ko.observable(control.collapsable);
-                        else
-                            control.collapsable = ko.observable(false);
-                    }
-                }
+                if (control.hasOwnProperty("collapsed"))
+                    control.collapsed = ko.observable(control.collapsed);
+                else
+                    control.collapsed = ko.observable(false);
             }
             
-            if (!control.processed) {
-                if (control.hasOwnProperty("name"))
-                    control.name = ko.observable(control.name);
-                else
-                    control.name = ko.observable("");
-
-                control.width = ko.observable(control.hasOwnProperty("width") ? control.width : "2");
-                control.offset = ko.observable(control.hasOwnProperty("offset") ? control.offset : "");
-            }
-
             if (control.hasOwnProperty("input")) {
-                if (control.processed)
-                    control.input(self._processInput(control.input()));
-                else
-                    control.input = ko.observableArray(self._processInput(control.input));
+                control.input = ko.observableArray(self._processInput(control.input));
             }
+
+            control.name = ko.observable(control.name || "");
+
+            control.width = ko.observable(control.hasOwnProperty("width") ? control.width : "2");
+            control.offset = ko.observable(control.hasOwnProperty("offset") ? control.offset : "");
 
             var js;
             if (control.hasOwnProperty("javascript")) {
@@ -169,7 +166,7 @@
 
         self.displayMode = function (customControl) {
             if (customControl.hasOwnProperty("children")) {
-                return (customControl.hasOwnProperty("name") && customControl.name() != "") ? "settingsCustomControls_containerTemplate_accordion" : "settingsCustomControls_containerTemplate";
+                return (customControl.hasOwnProperty("name") && customControl.name() != "") ? "settingsCustomControls_containerTemplate_collapsable" : "settingsCustomControls_containerTemplate_nameless";
             } else {
                 return "settingsCustomControls_controlTemplate";
             }
@@ -204,7 +201,7 @@
         }
 
         self.createElement = function (invokedOn, contextParent, selectedMenu) {
-            if (invokedOn.attr('id') == "base") {
+            if (contextParent.attr('id') == "base") {
                 self.customControlDialogViewModel.reset();
 
                 self.customControlDialogViewModel.show(function (ret) {
@@ -266,22 +263,48 @@
 
             if (element.hasOwnProperty("name")) {
                 data.name = element.name();
-                data.collapsable = element.hasOwnProperty("collapsable") ? element.collapsable() : false;
+            }
+            if (element.hasOwnProperty("template")) {
+                data.template = element.template();
+                data.regex = element.regex();
+                data.defaultValue = element.defaultValue() || "";
+
+                title = "Edit Output";
+                type = "output";
             }
             if (element.hasOwnProperty("layout")) {
                 data.layout = element.layout();
+                data.collapsed = element.collapsed();
+
                 title = "Edit Container";
                 type = "container";
             }
             if (element.hasOwnProperty("command")) {
                 data.commands = element.command;
+
                 title = "Edit Command";
                 type = "command";
             }
             if (element.hasOwnProperty("commands")) {
-                data.commands = element.commands;
+                var commands = "";
+                _.each(element.commands, function (e, index, list) {
+                    commands += e;
+                    if (index < list.length)
+                        commands += '\n';
+                });
+                data.commands = commands;
+
                 title = "Edit Command";
                 type = "command";
+            }
+            if (element.hasOwnProperty("script")) {
+                data.script = element.script;
+
+                title = "Edit Script command";
+                type = "script";
+            }
+            if (element.hasOwnProperty("confirm")) {
+                data.confirm = element.confirm;
             }
             if (element.hasOwnProperty("input"))
             {
@@ -290,20 +313,13 @@
                     data.input[index] = ko.mapping.toJS(element);
                 });
             }
-            if (element.hasOwnProperty("template")) {
-                data.template = element.template();
-                title = "Edit Output";
-                type = "output";
-            }
-            if (element.hasOwnProperty("regex"))
-                data.regex = element.regex();
-            if (element.hasOwnProperty("defaultValue"))
-                data.defaultValue = element.defaultValue();
 
-            if (element.hasOwnProperty("width"))
+            if (element.hasOwnProperty("width")) {
                 data.width = element.width();
-            if (element.hasOwnProperty("offset"))
+            }
+            if (element.hasOwnProperty("offset")) {
                 data.offset = element.offset();
+            }
 
             self.customControlDialogViewModel.reset(data);
             self.customControlDialogViewModel.title(gettext(title));
@@ -314,67 +330,65 @@
 
                 switch (self.customControlDialogViewModel.type()) {
                     case "container": {
-                        if (ret.hasOwnProperty("name"))
-                            element.name(ret.name);
-                           
+                        element.name(ret.name);                           
                         element.layout(ret.layout);
-
-                        if (ret.hasOwnProperty("collapsable") != "") {
-                            if (element.hasOwnProperty("collapsable")) {
-                                if (!ret.collapsable) {
-                                    var e = $('#toggle_' + element.id());
-                                    if (e)
-                                        e.height("auto");
-
-                                    e = $('#' + element.id() + ' div.accordion-heading a h1');
-                                    if (e)
-                                        e.removeClass('icon-caret-right');
-                                }
-
-                                element.collapsable(ret.collapsable);
-                            }
-                            else
-                                element.collapsable = ko.observable(ret.collapsable);
-                        }
-                        else {
-                            if (element.hasOwnProperty("collapsable")) {
-                                element.collapsable(false);
-                                delete element.collapsable;
-                            }
-
-                            var e = $('#toggle_' + element.id());
-                            if (e)
-                                e.height("auto");
-
-                            e = $('#' + element.id() + ' div.accordion-heading a h1');
-                            if (e)
-                                e.removeClass('icon-caret-right');
-                        }
+                        element.collapsed(ret.collapsed);
                         break;
                     }
                     case "command": {
-                        if (ret.hasOwnProperty("name"))
-                            element.name(ret.name);
+                        element.name(ret.name);
 
-                        delete element.command;
-                        delete element.commands;
-
-                        if (ret.command != undefined)
+                        if (ret.command != undefined) {
                             element.command = ret.command;
-                        if (ret.commands != undefined)
+                            delete element.commands;
+                        }
+                        if (ret.commands != undefined) {
                             element.commands = ret.commands;
+                            delete element.command;
+                        }
+
+                        if (ret.confirm != "") {
+                            element.confirm = ret.confirm;
+                        }
 
                         if (ret.input != undefined) {
                             element.input(self._processInput(ret.input));
                         }
                         else
                             delete element.input;
+
+                        // Command can also be a output
+                        if (ret.hasOwnProperty("template")) {
+                            if (element.hasOwnProperty("template"))
+                                element.template(ret.template);
+                            else
+                                element.template = ko.observable(ret.template);
+
+                            if (element.hasOwnProperty("regex"))
+                                element.regex(ret.regex);
+                            else
+                                element.regex = ko.observable(ret.regex);
+
+                            if (element.hasOwnProperty("defaultValue"))
+                                element.defaultValue(ret.defaultValue);
+                            else
+                                element.defaultValue = ko.observable(ret.defaultValue);
+                        }
+                        else
+                        {
+                            if (element.hasOwnProperty("defaultValue"))
+                                element.defaultValue(undefined);
+
+                            delete element.template;
+                            delete element.regex;
+                            delete element.defaultValue;
+                        }
                         break;
                     }
                     case "output": {
                         element.template(ret.template);
                         element.regex(ret.regex);
-                        element.deflt(ret.deflt);
+                        element.defaultValue(ret.defaultValue);
                         break;
                     }
                 }
@@ -392,33 +406,41 @@
         self.controlContextMenu = function (invokedOn, contextParent, selectedMenu)
         {
             switch (selectedMenu.attr('cmd')) {
-                case "createContainer": {
-                    self.customControlDialogViewModel.title(gettext("Create container"));
-                    self.customControlDialogViewModel.type("container");
-
-                    self.createElement(invokedOn, contextParent, selectedMenu);
-                    break;
-                }
-                case "createCommand": {
-                    self.customControlDialogViewModel.title(gettext("Create Command"));
-                    self.customControlDialogViewModel.type("command");
-
-                    self.createElement(invokedOn, contextParent, selectedMenu);
-                    break;
-                }
-                case "createOutput": {
-                    self.customControlDialogViewModel.title(gettext("Create Output"));
-                    self.customControlDialogViewModel.type("output");
-
-                    self.createElement(invokedOn, contextParent, selectedMenu);
+                case "editElement": {
+                    self.editElement(invokedOn, contextParent, selectedMenu);
                     break;
                 }
                 case "deleteElement": {
                     self.deleteElement(invokedOn, contextParent, selectedMenu);
                     break;
                 }
-                case "editElement": {
-                    self.editElement(invokedOn, contextParent, selectedMenu);
+                default: {
+                    if (selectedMenu.attr('cmd').startsWith("create")) {
+                        switch (selectedMenu.attr('cmd')) {
+                            case "createContainer": {
+                                self.customControlDialogViewModel.title(gettext("Create container"));
+                                self.customControlDialogViewModel.type("container");
+                                break;
+                            }
+                            case "createCommand": {
+                                self.customControlDialogViewModel.title(gettext("Create Command"));
+                                self.customControlDialogViewModel.type("command");
+                                break;
+                            }
+                            case "createScript": {
+                                self.customControlDialogViewModel.title(gettext("Create Script"));
+                                self.customControlDialogViewModel.type("script");
+                                break;
+                            }
+                            case "createOutput": {
+                                self.customControlDialogViewModel.title(gettext("Create Output"));
+                                self.customControlDialogViewModel.type("output");
+                                break;
+                            }
+                        }
+
+                        self.createElement(invokedOn, contextParent, selectedMenu);
+                    }
                     break;
                 }
             }

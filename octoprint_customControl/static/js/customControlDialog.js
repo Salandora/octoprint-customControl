@@ -8,6 +8,8 @@
         self.type = ko.observable("container");
 
         self.useInputs = ko.observable(false);
+        self.useConfirm = ko.observable(false);
+        self.useOutput = ko.observable(false);
         self.useJavaScript = ko.observable(false);
         self.useEnabled = ko.observable(false);
 
@@ -19,7 +21,8 @@
         self.types = ko.observableArray([
             { name: gettext("Container"), key: "container" },
             { name: gettext("Command"), key: "command" },
-            { name: gettext("Output"), key: "output" }
+            { name: gettext("Script"), key: "script" },
+            { name: gettext("Output"), key: "output" },
         ]);
 
         self.hasSlider = ko.computed(function () {
@@ -56,8 +59,9 @@
         self.reset = function (data) {
             var element = {
                 name: undefined,
-                collapsable: true,
+                collapsed: false,
                 commands: "",
+                confirm: "",
                 defaultValue: "",
                 script: "",
                 javascript: "",
@@ -72,20 +76,15 @@
                 parent: undefined
             };
 
-            if (typeof data == "object")
+            if (typeof data == "object") {
                 element = _.extend(element, data);
 
-            var mapped = ko.mapping.fromJS(element);
-            if (data.hasOwnProperty("input")) {
-                self.useInputs(true);
-
-                //_.each(mapped.input(), function (e, index, list) {
-                //    if (e.hasOwnProperty("slider") && !$.isFunction(e.slider))
-                //        e.slider = ko.observable(e.slider);
-                //});
+                self.useConfirm(data.hasOwnProperty("confirm"));
+                self.useInputs(data.hasOwnProperty("input"));
+                self.useOutput(data.hasOwnProperty("template"));
             }
 
-            self.element(mapped);
+            self.element(ko.mapping.fromJS(element));
         }
         self.show = function (f) {
             var dialog = $("#customControlDialog");
@@ -99,14 +98,9 @@
                     case "container": {
                         el.name = obj.name;
                         el.layout = obj.layout;
-                        if (obj.name != "")
-                            el.collapsable = obj.collapsable;
+                        el.collapsed = obj.collapsed;
 
                         el.children = [];
-
-                        el.width = obj.width;
-                        el.offset = obj.offset;
-
                         break;
                     }
                     case "command": {
@@ -114,10 +108,11 @@
                         if (obj.commands.indexOf('\n') == -1)
                             el.command = obj.commands;
                         else
-                            el.commands = obj.commands;
+                            el.commands = obj.commands.split('\n');
 
-                        el.width = obj.width;
-                        el.offset = obj.offset;
+                        if (self.useConfirm()) {
+                            el.confirm = obj.confirm;
+                        }
 
                         if (self.useInputs()) {
                             el.input = [];
@@ -142,19 +137,59 @@
                                 el.input.push(input);
                             });
                         }
+
+                        if (self.useOutput()) {
+                            el.template = obj.template;
+                            el.regex = obj.regex;
+                            el.defaultValue = obj.defaultValue;
+                        }
                         break;
                     }
+                    case "script":
+                        {
+                            el.name = obj.name;
+                            el.script = obj.script;
+
+                            if (self.useConfirm()) {
+                                el.confirm = obj.confirm;
+                            }
+
+                            if (self.useInputs()) {
+                                el.input = [];
+                                _.each(obj.input, function (element, index, list) {
+                                    var input = {
+                                        name: element.name,
+                                        parameter: element.parameter,
+                                        defaultValue: element.defaultValue
+                                    };
+                                    if (element.hasOwnProperty("slider") && element.slider != false) {
+                                        input["slider"] = {
+                                        };
+
+                                        if (element.slider.hasOwnProperty("min") && element.slider.min != "")
+                                            input.slider.min = element.slider.min;
+                                        if (element.slider.hasOwnProperty("max") && element.slider.max != "")
+                                            input.slider.max = element.slider.max;
+                                        if (element.slider.hasOwnProperty("step") && element.slider.step != "")
+                                            input.slider.step = element.slider.step;
+                                    }
+
+                                    el.input.push(input);
+                                });
+                            }
+                            break;
+                        }
                     case "output": {
                         el.template = obj.template;
                         el.regex = obj.regex;
                         el.defaultValue = obj.defaultValue;
-
-                        el.width = obj.width;
-                        el.offset = obj.offset;
-
                         break;
                     }
                 }
+
+                el.width = obj.width;
+                el.offset = obj.offset;
+
                 f(el);
             });
 
