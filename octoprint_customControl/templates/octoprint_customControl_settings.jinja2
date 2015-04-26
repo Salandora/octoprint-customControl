@@ -85,7 +85,7 @@
     <!-- ko foreach: input -->
         <label style="cursor: default" data-bind="text: name"></label>
         <!-- ko if: slider -->
-            <input type="number" style="width: 100px" data-bind="slider: {value: defaultValue, min: slider.min(), max: slider.max(), step: slider.step(), enabled: false }">
+            <input type="number" style="width: 100px" data-bind="slider: {value: value, min: slider.min(), max: slider.max(), step: slider.step(), enabled: false }">
         <!-- /ko -->
         <!-- ko ifnot: slider -->
             <input type="text" class="input-small" data-bind="attr: {placeholder: name}, value: defaultValue, disable: true">

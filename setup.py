@@ -21,7 +21,7 @@ plugin_version = "0.1"
 
 # The plugin's description. Can be overwritten within OctoPrint's internal data via __plugin_description__ in the plugin
 # module
-plugin_description = ""
+plugin_description = "Makes Custom Controls editable via settings"
 
 # The plugin's author. Can be overwritten within OctoPrint's internal data via __plugin_author__ in the plugin module
 plugin_author = "Marc Hannappel (Salandora)"
@@ -30,7 +30,7 @@ plugin_author = "Marc Hannappel (Salandora)"
 plugin_author_email = "sunpack@web.de"
 
 # The plugin's homepage URL. Can be overwritten within OctoPrint's internal data via __plugin_url__ in the plugin module
-plugin_url = ""
+plugin_url = "https://github.com/Salandora/octoprint-customControl"
 
 # The plugin's license. Can be overwritten within OctoPrint's internal data via __plugin_license__ in the plugin module
 plugin_license = "AGPLv3"

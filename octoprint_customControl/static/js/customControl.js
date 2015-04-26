@@ -73,7 +73,7 @@
                 var input = {
                     name: ko.observable(list[i].name),
                     parameter: ko.observable(list[i].parameter),
-                    defaultValue: ko.observable(list[i].defaultValue || "0")
+                    defaultValue: ko.observable(list[i].defaultValue != "" ? list[i].defaultValue : undefined),
                 };
 
                 if (list[i].hasOwnProperty("slider") && typeof list[i].slider == "object") {
@@ -82,9 +82,25 @@
                         max: ko.observable(list[i].slider.max),
                         step: ko.observable(list[i].slider.step),
                     }
+                    
+                    var param = list[i].hasOwnProperty("defaultValue") && !isNaN(list[i].defaultValue) && list[i].defaultValue != undefined && list[i].defaultValue != "" ? list[i].defaultValue : (list[i].slider.hasOwnProperty("min") && !isNaN(list[i].slider.min) && list[i].slider.min != undefined && list[i].slider.min != "" ? list[i].slider.min : 0);
+                    if (typeof param == "string")
+                        param = parseInt(param);
+
+                    if (list[i].slider.hasOwnProperty("min") && param < list[i].slider.min)
+                        param = list[i].slider.min;
+
+                    if (list[i].slider.hasOwnProperty("max") && param > list[i].slider.max)
+                        param = list[i].slider.max;
+
+                    if (typeof param == "string")
+                        param = parseInt(param);
+
+                    input.value = ko.observable(param);
                 }
                 else {
                     input.slider = false;
+                    input.value = ko.observable(!isNaN(list[i].defaultValue) ? list[i].defaultValue : undefined);
                 }
 
                 inputs.push(input);
@@ -383,6 +399,22 @@
                             delete element.regex;
                             delete element.defaultValue;
                         }
+                        break;
+                    }
+                    case "script": {
+                        element.name(ret.name);
+                        element.script = ret.script;
+
+                        if (ret.confirm != "") {
+                            element.confirm = ret.confirm;
+                        }
+
+                        if (ret.input != undefined) {
+                            element.input(self._processInput(ret.input));
+                        }
+                        else
+                            delete element.input;
+
                         break;
                     }
                     case "output": {

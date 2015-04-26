@@ -120,11 +120,13 @@
                                 var input = {
                                     name: element.name,
                                     parameter: element.parameter,
-                                    defaultValue: element.defaultValue
+                                    defaultValue: !isNaN(element.defaultValue) ? element.defaultValue : undefined
                                 };
                                 if (element.hasOwnProperty("slider") && element.slider != false) {
                                     input["slider"] = {
                                     };
+
+                                    input.defaultValue = !isNaN(element.defaultValue) && element.defaultValue != undefined && element.defaultValue != "" ? parseInt(element.defaultValue) : undefined;
 
                                     if (element.slider.hasOwnProperty("min") && element.slider.min != "")
                                         input.slider.min = element.slider.min;
@@ -160,18 +162,20 @@
                                     var input = {
                                         name: element.name,
                                         parameter: element.parameter,
-                                        defaultValue: element.defaultValue
+                                        defaultValue: !isNaN(element.defaultValue) ? element.defaultValue : undefined
                                     };
                                     if (element.hasOwnProperty("slider") && element.slider != false) {
                                         input["slider"] = {
                                         };
 
-                                        if (element.slider.hasOwnProperty("min") && element.slider.min != "")
-                                            input.slider.min = element.slider.min;
-                                        if (element.slider.hasOwnProperty("max") && element.slider.max != "")
-                                            input.slider.max = element.slider.max;
-                                        if (element.slider.hasOwnProperty("step") && element.slider.step != "")
-                                            input.slider.step = element.slider.step;
+                                        input.defaultValue = !isNaN(element.defaultValue) && element.defaultValue != undefined && element.defaultValue != "" ? parseInt(element.defaultValue) : undefined;
+
+                                        if (element.slider.min != "")
+                                            input.slider.min = parseInt(element.slider.min);
+                                        if (element.slider.max != "")
+                                            input.slider.max = parseInt(element.slider.max);
+                                        if (element.slider.step != "")
+                                            input.slider.step = parseInt(element.slider.step);
                                     }
 
                                     el.input.push(input);
@@ -217,11 +221,11 @@
             var obj = {
                 name: ko.observable(""),
                 parameter: ko.observable(""),
-                defaultValue: ko.observable(""),
+                defaultValue: ko.observable(),
                 slider: {
-                    min: ko.observable(""),
-                    max: ko.observable(""),
-                    step: ko.observable("")
+                    min: ko.observable(),
+                    max: ko.observable(),
+                    step: ko.observable()
                 }
             }
 
