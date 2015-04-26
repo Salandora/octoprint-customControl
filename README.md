@@ -1,9 +1,8 @@
-Plugin for OctoPrint - makes Custom Controls editable via settings
-==================================================================
-
 ### ATTENTION
 Plugin still in development!
 
+# Plugin for OctoPrint - makes Custom Controls editable via settings
+==================================================================
 
 This plugin helps you create, edit and delete your custom controls.
 You can easly access all the options in the settings under customControl.
