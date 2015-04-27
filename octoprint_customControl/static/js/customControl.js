@@ -524,6 +524,6 @@
     OCTOPRINT_VIEWMODELS.push([
         CustomControlViewModel,
         ["loginStateViewModel", "settingsViewModel", "controlViewModel", "customControlDialogViewModel"],
-        "#settings_plugin_octoprint_customControl"
+        "#settings_plugin_customControl"
     ]);
 });
