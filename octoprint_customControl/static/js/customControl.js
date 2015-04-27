@@ -69,29 +69,42 @@
         self._processInput = function (list) {
             var inputs = [];
 
-            for (var i = 0; i < list.length; i++) {
+            correctlyDefined = function (e, key) {
+                return e.hasOwnProperty(key) && !isNaN(e[key]) && e[key] != undefined && e[key] != "";
+            };
+
+            _.each(list, function (element, index, l) {
                 var input = {
-                    name: ko.observable(list[i].name),
-                    parameter: ko.observable(list[i].parameter),
-                    defaultValue: ko.observable(list[i].defaultValue != "" ? list[i].defaultValue : undefined),
+                    name: ko.observable(element.name),
+                    parameter: ko.observable(element.parameter),
+                    defaultValue: ko.observable(element.defaultValue != "" ? element.defaultValue : undefined),
                 };
 
-                if (list[i].hasOwnProperty("slider") && typeof list[i].slider == "object") {
+                if (element.hasOwnProperty("slider") && typeof element.slider == "object") {
                     input.slider = {
-                        min: ko.observable(list[i].slider.min),
-                        max: ko.observable(list[i].slider.max),
-                        step: ko.observable(list[i].slider.step),
+                        min: ko.observable(element.slider.min),
+                        max: ko.observable(element.slider.max),
+                        step: ko.observable(element.slider.step),
                     }
-                    
-                    var param = list[i].hasOwnProperty("defaultValue") && !isNaN(list[i].defaultValue) && list[i].defaultValue != undefined && list[i].defaultValue != "" ? list[i].defaultValue : (list[i].slider.hasOwnProperty("min") && !isNaN(list[i].slider.min) && list[i].slider.min != undefined && list[i].slider.min != "" ? list[i].slider.min : 0);
+
+                    var correctMin = correctlyDefined(element.slider, "min");
+                    var correctMax = correctlyDefined(element.slider, "max");
+
+                    var param = 0;
+                    if (correctlyDefined(element, "defaultValue")) {
+                        param = element.defaultValue;
+                    }
+                    else if (correctMin)
+                        param = element.slider.min;
+
                     if (typeof param == "string")
                         param = parseInt(param);
 
-                    if (list[i].slider.hasOwnProperty("min") && param < list[i].slider.min)
-                        param = list[i].slider.min;
+                    if (correctMin && param < element.slider.min)
+                        param = element.slider.min;
 
-                    if (list[i].slider.hasOwnProperty("max") && param > list[i].slider.max)
-                        param = list[i].slider.max;
+                    if (correctMax && param > element.slider.max)
+                        param = element.slider.max;
 
                     if (typeof param == "string")
                         param = parseInt(param);
@@ -100,11 +113,11 @@
                 }
                 else {
                     input.slider = false;
-                    input.value = ko.observable(!isNaN(list[i].defaultValue) ? list[i].defaultValue : undefined);
+                    input.value = ko.observable(correctlyDefined(element, "defaultValue") ? element.defaultValue : undefined);
                 }
 
                 inputs.push(input);
-            }
+            });
 
             return inputs;
         }
@@ -155,25 +168,11 @@
 
             var js;
             if (control.hasOwnProperty("javascript")) {
-                js = control.javascript;
-
-                // if js is a function everything's fine already, but if it's a string we need to eval that first
-                /*if (!_.isFunction(js)) {
-                    control.javascript = function (data) {
-                        eval(js);
-                    };
-                }*/
+                control.javascript = control.javascript;
             }
 
             if (control.hasOwnProperty("enabled")) {
-                js = control.enabled;
-
-                // if js is a function everything's fine already, but if it's a string we need to eval that first
-                /*if (!_.isFunction(js)) {
-                    control.enabled = function (data) {
-                        return eval(js);
-                    }
-                }*/
+                control.enabled = control.enabled;
             }
 
             control.processed = true;
@@ -512,7 +511,7 @@
         }
         self.onSettingsBeforeSave = function () {
             self.recursiveDeleteProperties(self.controlsFromServer);
-            self.settingsViewModel.settings.plugins.octoprint_customControl.controls = self.controlsFromServer;
+            self.settingsViewModel.settings.plugins.customControl.controls = self.controlsFromServer;
         }
 
         self.onEventSettingsUpdated = function (payload) {
