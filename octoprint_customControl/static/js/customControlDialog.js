@@ -115,18 +115,33 @@
                         }
 
                         if (self.useInputs()) {
+                            var attributeToInt = function (obj, key, def) {
+                                if (obj.hasOwnProperty(key)) {
+                                    var val = obj[key];
+                                    if (_.isNumber(val)) {
+                                        return val;
+                                    }
+
+                                    var parsedVal = parseInt(val);
+                                    if (!isNaN(parsedVal)) {
+                                        return parsedVal;
+                                    }
+                                }
+                                return def;
+                            };
+
                             el.input = [];
                             _.each(obj.input, function (element, index, list) {
                                 var input = {
                                     name: element.name,
                                     parameter: element.parameter,
-                                    defaultValue: !isNaN(element.defaultValue) ? element.defaultValue : undefined
+                                    default: element.defaultValue
                                 };
                                 if (element.hasOwnProperty("slider") && element.slider != false) {
                                     input["slider"] = {
                                     };
 
-                                    input.defaultValue = !isNaN(element.defaultValue) && element.defaultValue != undefined && element.defaultValue != "" ? parseInt(element.defaultValue) : undefined;
+                                    input.default = attributeToInt(element, "defaultValue", undefined);
 
                                     if (element.slider.hasOwnProperty("min") && element.slider.min != "")
                                         input.slider.min = element.slider.min;
@@ -143,7 +158,7 @@
                         if (self.useOutput()) {
                             el.template = obj.template;
                             el.regex = obj.regex;
-                            el.defaultValue = obj.defaultValue;
+                            el.default = obj.defaultValue;
                         }
                         break;
                     }

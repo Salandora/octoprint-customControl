@@ -69,51 +69,48 @@
         self._processInput = function (list) {
             var inputs = [];
 
-            correctlyDefined = function (e, key) {
-                return e.hasOwnProperty(key) && !isNaN(e[key]) && e[key] != undefined && e[key] != "";
+            var attributeToInt = function (obj, key, def) {
+                if (obj.hasOwnProperty(key)) {
+                    var val = obj[key];
+                    if (_.isNumber(val)) {
+                        return val;
+                    }
+
+                    var parsedVal = parseInt(val);
+                    if (!isNaN(parsedVal)) {
+                        return parsedVal;
+                    }
+                }
+                return def;
             };
 
             _.each(list, function (element, index, l) {
                 var input = {
                     name: ko.observable(element.name),
                     parameter: ko.observable(element.parameter),
-                    defaultValue: ko.observable(element.defaultValue != "" ? element.defaultValue : undefined),
-                };
+                    default: ko.observable(element.default != "" ? element.default : undefined)
+                }
 
                 if (element.hasOwnProperty("slider") && typeof element.slider == "object") {
                     input.slider = {
                         min: ko.observable(element.slider.min),
                         max: ko.observable(element.slider.max),
-                        step: ko.observable(element.slider.step),
+                        step: ko.observable(element.slider.step)
                     }
 
-                    var correctMin = correctlyDefined(element.slider, "min");
-                    var correctMax = correctlyDefined(element.slider, "max");
+                    var defaultValue = attributeToInt(element, "default", attributeToInt(element.slider, "min", 0));
 
-                    var param = 0;
-                    if (correctlyDefined(element, "defaultValue")) {
-                        param = element.defaultValue;
+                    // if default value is not within range of min and max, correct that
+                    if (!_.inRange(defaultValue, element.slider.min, element.slider.max)) {
+                        // use bound closer to configured default value
+                        defaultValue = defaultValue < element.slider.min ? element.slider.min : element.slider.max;
                     }
-                    else if (correctMin)
-                        param = element.slider.min;
 
-                    if (typeof param == "string")
-                        param = parseInt(param);
-
-                    if (correctMin && param < element.slider.min)
-                        param = element.slider.min;
-
-                    if (correctMax && param > element.slider.max)
-                        param = element.slider.max;
-
-                    if (typeof param == "string")
-                        param = parseInt(param);
-
-                    input.value = ko.observable(param);
+                    input.value = ko.observable(defaultValue);
                 }
                 else {
                     input.slider = false;
-                    input.value = ko.observable(correctlyDefined(element, "defaultValue") ? element.defaultValue : undefined);
+                    input.value = input.default;
                 }
 
                 inputs.push(input);
@@ -141,7 +138,12 @@
             if (control.hasOwnProperty("template") && control.hasOwnProperty("regex")) {
                 control.template = ko.observable(control.template);
                 control.regex = ko.observable(control.regex);
-                control.defaultValue = ko.observable(control.defaultValue || "");
+                control.default = ko.observable(control.default || "");
+                control.value = control.default;
+
+
+                delete control.key;
+                delete control.template_key;
             }
 
             if (control.hasOwnProperty("children")) {
@@ -282,7 +284,7 @@
             if (element.hasOwnProperty("template")) {
                 data.template = element.template();
                 data.regex = element.regex();
-                data.defaultValue = element.defaultValue() || "";
+                data.default = element.default() || "";
 
                 title = "Edit Output";
                 type = "output";
@@ -325,6 +327,9 @@
             {
                 data.input = [];
                 _.each(element.input(), function (element, index, list) {
+                    if (element.hasOwnProperty("default")) {
+                        data.input[index].defaultValue = element.default;
+                    }
                     data.input[index] = ko.mapping.toJS(element);
                 });
             }
@@ -367,6 +372,10 @@
                         }
 
                         if (ret.input != undefined) {
+                            _.each(ret.input, function (element, index, list) {
+                                data.input[index] = ko.mapping.toJS(element);
+                            });
+
                             element.input(self._processInput(ret.input));
                         }
                         else
@@ -384,19 +393,19 @@
                             else
                                 element.regex = ko.observable(ret.regex);
 
-                            if (element.hasOwnProperty("defaultValue"))
-                                element.defaultValue(ret.defaultValue);
+                            if (element.hasOwnProperty("default"))
+                                element.default(ret.defaultValue);
                             else
-                                element.defaultValue = ko.observable(ret.defaultValue);
+                                element.default = ko.observable(ret.defaultValue);
                         }
                         else
                         {
-                            if (element.hasOwnProperty("defaultValue"))
-                                element.defaultValue(undefined);
+                            if (element.hasOwnProperty("default"))
+                                element.default(undefined);
 
                             delete element.template;
                             delete element.regex;
-                            delete element.defaultValue;
+                            delete element.default;
                         }
                         break;
                     }
@@ -419,7 +428,7 @@
                     case "output": {
                         element.template(ret.template);
                         element.regex(ret.regex);
-                        element.defaultValue(ret.defaultValue);
+                        element.default(ret.defaultValue);
                         break;
                     }
                 }
@@ -494,6 +503,7 @@
                 delete list[i].output;
                 delete list[i].key;
                 delete list[i].template_key;
+                delete list[i].value;
 
                 if (list[i].hasOwnProperty("width") && list[i].width() == "")
                     delete list[i].width;
