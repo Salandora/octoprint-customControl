@@ -88,10 +88,10 @@
                 var input = {
                     name: ko.observable(element.name),
                     parameter: ko.observable(element.parameter),
-                    default: ko.observable(element.default != "" ? element.default : undefined)
+                    default: ko.observable(element.hasOwnProperty("default") ? element.default : undefined)
                 }
 
-                if (element.hasOwnProperty("slider") && typeof element.slider == "object") {
+                if (element.hasOwnProperty("slider") && _.isObject(element.slider)) {
                     input.slider = {
                         min: ko.observable(element.slider.min),
                         max: ko.observable(element.slider.max),
@@ -139,8 +139,7 @@
                 control.template = ko.observable(control.template);
                 control.regex = ko.observable(control.regex);
                 control.default = ko.observable(control.default || "");
-                control.value = control.default;
-
+                control.value = ko.computed(function () { return control.default(); });
 
                 delete control.key;
                 delete control.template_key;
@@ -284,7 +283,7 @@
             if (element.hasOwnProperty("template")) {
                 data.template = element.template();
                 data.regex = element.regex();
-                data.default = element.default() || "";
+                data.defaultValue = element.default() || "";
 
                 title = "Edit Output";
                 type = "output";
@@ -327,10 +326,10 @@
             {
                 data.input = [];
                 _.each(element.input(), function (element, index, list) {
+                    data.input[index] = ko.mapping.toJS(element);
                     if (element.hasOwnProperty("default")) {
                         data.input[index].defaultValue = element.default;
                     }
-                    data.input[index] = ko.mapping.toJS(element);
                 });
             }
 
@@ -394,9 +393,9 @@
                                 element.regex = ko.observable(ret.regex);
 
                             if (element.hasOwnProperty("default"))
-                                element.default(ret.defaultValue);
+                                element.default(ret.default);
                             else
-                                element.default = ko.observable(ret.defaultValue);
+                                element.default = ko.observable(ret.default);
                         }
                         else
                         {
@@ -490,34 +489,50 @@
         }
        
         self.recursiveDeleteProperties = function (list) {
-            for (var i = 0; i < list.length; i++) {
-                if (!list[i].parent || (list[i].parent.hasOwnProperty("layout") && list[i].parent.layout() != "horizontal_grid"))
-                {
-                    delete list[i].width;
-                    delete list[i].offset;
+            _.each(list, function (element, index, ll) {
+                if (!element.parent || (element.parent.hasOwnProperty("layout") && element.parent.layout() != "horizontal_grid")) {
+                    delete element.width;
+                    delete element.offset;
                 }
 
-                delete list[i].id;
-                delete list[i].parent;
-                delete list[i].processed;
-                delete list[i].output;
-                delete list[i].key;
-                delete list[i].template_key;
-                delete list[i].value;
+                if (element.default == "")
+                    delete element.default;
 
-                if (list[i].hasOwnProperty("width") && list[i].width() == "")
-                    delete list[i].width;
-                if (list[i].hasOwnProperty("offset") && list[i].offset() == "")
-                    delete list[i].offset;
+                delete element.id;
+                delete element.parent;
+                delete element.processed;
+                delete element.output;
+                delete element.key;
+                delete element.template_key;
+                delete element.value;
 
-                if (!list[i].hasOwnProperty("name") || list[i].name() == "") {
-                    delete list[i].name;
-                    delete list[i].collapsable;
+                if (element.hasOwnProperty("input")) {
+                    _.each(element.input(), function (e, i, l) {
+                        if (e.default == "")
+                            delete e.default;
+
+                        delete e.value;
+                    });
                 }
 
-                if (list[i].hasOwnProperty("children"))
-                     self.recursiveDeleteProperties(list[i].children());
-            }
+                if (element.hasOwnProperty("width") && element.width() == "")
+                    delete element.width;
+                if (element.hasOwnProperty("offset") && element.offset() == "")
+                    delete element.offset;
+
+                if (!element.hasOwnProperty("name") || element.name() == "") {
+                    delete element.name;
+                    delete element.collapsed;
+                }
+
+
+                if (element.hasOwnProperty("children")) {
+                    if (element.hasOwnProperty("collapsed") && !element.collapsed())
+                        delete element.collapsed;
+
+                    self.recursiveDeleteProperties(element.children());
+                }
+            });
         }
         self.onSettingsBeforeSave = function () {
             self.recursiveDeleteProperties(self.controlsFromServer);

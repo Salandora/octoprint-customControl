@@ -78,7 +78,7 @@
     <form class="form-inline custom_control" style="min-height:15px; border:1px dotted #000000" data-bind="contextMenu: { menuSelector: '#commandContextMenu', menuSelected: $root.controlContextMenu }, attr: { 'id': id }">
         <!-- ko template: { name: 'settingsCustomControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
         <!-- ko template: { name: 'settingsCustomControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } --><!-- /ko -->
-        <!-- ko template: { name: 'settingsCustomControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('defaultValue') && defaultValue() } --><!-- /ko -->
+        <!-- ko template: { name: 'settingsCustomControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('value') } --><!-- /ko -->
     </form>
 </script>
 <script type="text/html" id="settingsCustomControls_controlTemplate_input">
