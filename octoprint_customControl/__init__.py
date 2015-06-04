@@ -18,6 +18,16 @@ class CustomControlPlugin(octoprint.plugin.SettingsPlugin,
 			controls = []
 			)
 
+	def get_template_configs(self):
+		if "editorcollection" in self._plugin_manager.enabled_plugins:
+			return [
+				dict(type="plugin_editorcollection_EditorCollection", template="customControl_hookedsettings.jinja2", custom_bindings=True)
+			]
+		else:
+			return [
+				dict(type="settings", template="customControl_hookedsettings.jinja2", custom_bindings=True)
+			]
+
 	def on_settings_save(self, data):
 		s = settings()
 		s.set(["controls"], data["controls"])
