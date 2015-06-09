@@ -1,9 +1,8 @@
 # coding=utf-8
 from __future__ import absolute_import
 
-__author__ = "Marc Hannappel <sunpack@web.de>"
+__author__ = "Marc Hannappel <salandora@gmail.com>"
 __license__ = 'GNU Affero General Public License http://www.gnu.org/licenses/agpl.html'
-__copyright__ = "Copyright (C) 2014 The OctoPrint Project - Released under terms of the AGPLv3 License"
 
 from octoprint.settings import settings
 
@@ -42,9 +41,33 @@ class CustomControlPlugin(octoprint.plugin.SettingsPlugin,
 			less=["less/customControls.less"]
 		)
 
-# If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
-# ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
-# can be overwritten via __plugin_xyz__ control properties. See the documentation for that.
-__plugin_name__ = "CustomControl"
-__plugin_license__ = "AGPLv3"
-__plugin_implementation__ = CustomControlPlugin()
+	def get_update_information(self):
+		return dict(
+			systemcommandeditor=dict(
+				displayName="Custom Control Editor Plugin",
+				displayVersion=self._plugin_version,
+
+				# version check: github repository
+				type="github_release",
+				user="Salanddora",
+				repo="octoprint-customControl",
+				current=self._plugin_version,
+
+				# update method: pip
+				pip="https://github.com/Salandora/octoprint-customControl/archive/{target_version}.zip"
+			)
+		)
+
+__plugin_name__ = "Custom Control Editor"
+def __plugin_load__():
+	global __plugin_implementation__
+	__plugin_implementation__ = CustomControlPlugin()
+
+	global __plugin_hooks__
+	__plugin_hooks__ = {
+		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information
+	}
+
+	global __plugin_license__
+	__plugin_license__ = "AGPLv3"
+
