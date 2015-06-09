@@ -43,7 +43,7 @@ class CustomControlPlugin(octoprint.plugin.SettingsPlugin,
 
 	def get_update_information(self):
 		return dict(
-			systemcommandeditor=dict(
+			customcontrol=dict(
 				displayName="Custom Control Editor Plugin",
 				displayVersion=self._plugin_version,
 
