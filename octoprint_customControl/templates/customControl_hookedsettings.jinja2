@@ -4,7 +4,7 @@
 </div>
 
 <!-- "width: 588px" to be the same as teh real Control tab-->						
-<div style="width: 588px; clear: both; display: none;" id="customControls" data-bind="visible: loginState.isUser, template: { name: $root.displayMode, foreach: controls }"></div>
+<div class="innerSortable" style="width: 588px; clear: both; display: none;" id="customControls" data-bind="visible: loginState.isUser, template: { name: $root.displayMode, foreach: controls }"></div>
 
 <ul id="controlContextMenu" class="dropdown-menu" role="menu" style="display:block;position:fixed !important;margin-bottom:5px;">
 	<li>
@@ -47,27 +47,27 @@
 
 <!-- Templates for custom controls -->
 <script type="text/html" id="settingsCustomControls_containerTemplate_nameless">
-    <div class="custom_section" data-bind="contextMenu: { menuSelector: '#containerContextMenu', menuSelected: $root.controlContextMenu }, css: { 'custom_section_vertical_section': name() == '' }, attr: { 'id': id }">
+    <div class="custom_section sortable" data-bind="contextMenu: { menuSelector: '#containerContextMenu', menuSelected: $root.controlContextMenu }, css: { 'custom_section_vertical_section': name() == '' }, attr: { 'id': id }">
         <!-- ko template: { name: 'settingsCustomControls_containerTemplate', data: $data } --><!-- /ko -->
     </div>
 </script>
 <script type="text/html" id="settingsCustomControls_containerTemplate_collapsable">
-    <div class="custom_section" data-bind="contextMenu: { menuSelector: '#containerContextMenu', menuSelected: $root.controlContextMenu }, css: { 'custom_section_vertical_section': name() == '' }, attr: { 'id': id }">
+    <div class="custom_section sortable" data-bind="contextMenu: { menuSelector: '#containerContextMenu', menuSelected: $root.controlContextMenu }, attr: { 'id': id }">
         <h1 onclick="$(this).children().first().toggleClass('icon-caret-down icon-caret-right').parent().next().slideToggle('fast')"><i data-bind="css: {'icon-caret-down': !collapsed(), 'icon-caret-right': collapsed()}"></i> <span data-bind="text: name"></span></h1>
         <!-- ko template: { name: 'settingsCustomControls_containerTemplate', data: $data } --><!-- /ko -->
     </div>
 </script>
 <script type="text/html" id="settingsCustomControls_containerTemplate">
     <!-- ko if: layout() == 'vertical' -->
-    <div class="custom_section_vertical" data-bind="template: { name: $root.displayMode, foreach: children }, css: {hide: collapsed() && name() != '' }"></div>
+    <div class="custom_section_vertical innerSortable" data-bind="template: { name: $root.displayMode, foreach: children }, css: {hide: collapsed() && name() != '' }"></div>
     <!-- /ko -->
 
     <!-- ko if: layout() == 'horizontal' -->
-    <div class="custom_section_horizontal" data-bind="template: { name: $root.displayMode, foreach: children }, css: {hide: collapsed() && name() != '' }"></div>
+    <div class="custom_section_horizontal innerSortable" data-bind="template: { name: $root.displayMode, foreach: children }, css: {hide: collapsed() && name() != '' }"></div>
     <!-- /ko -->
 
     <!-- ko if: layout() == 'horizontal_grid' -->
-    <div class="row-fluid custom_section_horizontal_grid" data-bind="css: {hide: collapsed() && name() != ''}">
+    <div class="row-fluid custom_section_horizontal_grid innerSortable" data-bind="css: {hide: collapsed() && name() != ''}">
         <!-- ko foreach: children -->
         <div data-bind="template: { name: $root.displayMode }, css: $root.rowCss($data)"></div>
         <!-- /ko -->
@@ -75,7 +75,7 @@
     <!-- /ko -->
 </script>
 <script type="text/html" id="settingsCustomControls_controlTemplate">
-    <form class="form-inline custom_control" style="min-height:15px; border:1px dotted #000000" data-bind="contextMenu: { menuSelector: '#commandContextMenu', menuSelected: $root.controlContextMenu }, attr: { 'id': id }">
+    <form class="form-inline custom_control" style="min-height:15px; border:1px dotted #000000" data-bind="contextMenu: { menuSelector: '#commandContextMenu', menuSelected: $root.controlContextMenu }, css: { 'sortable': $parent.layout() != 'horizontal_grid' }, attr: { 'id': id }">
         <!-- ko template: { name: 'settingsCustomControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
         <!-- ko template: { name: 'settingsCustomControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } --><!-- /ko -->
         <!-- ko template: { name: 'settingsCustomControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('value') } --><!-- /ko -->

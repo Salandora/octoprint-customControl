@@ -56,7 +56,75 @@
             // TODO: Brainstorming about how to handle additionalControls...
 
             self.staticID = 0;
-            self.controls(self._processControls(undefined, self.controlsFromServer))
+            self.controls(undefined);
+            self.controls(self._processControls(undefined, self.controlsFromServer));
+
+            $(".innerSortable").sortable({
+                connectWith: ".innerSortable",
+                items: "> .sortable",
+                cancel: '',
+                sort: function (event, ui) {
+                  var self = $(this),
+                      width = ui.helper.outerWidth(),
+                      top = ui.helper.position().top;//changed to ;
+
+                  self.children().each(function () {
+                    if ($(this).hasClass('ui-sortable-helper') || $(this).hasClass('ui-sortable-placeholder')) {
+                      return true;
+                    }
+                    // If overlap is more than half of the dragged item
+                    var distance = Math.abs(ui.position.left - $(this).position().left),
+                        before = ui.position.left > $(this).position().left;
+
+                    if ((width - distance) > (width / 2) && (distance < width) && $(this).position().top === top) {
+                      if (before) {
+                        $('.ui-sortable-placeholder', self).insertBefore($(this));
+                      } else {
+                        $('.ui-sortable-placeholder', self).insertAfter($(this));
+                      }
+                      return false;
+                    }
+                  });
+                },
+                update: function(event, ui) {
+                    var target = ko.dataFor(this);
+                    var item = ko.dataFor(ui.item[0]);
+
+                    if (target == undefined) {
+                        return;
+                    } else {
+                        if (target == self) {
+                            if (!item.hasOwnProperty("children")) {
+                                return;
+                            }
+                        }
+                        else if (!target.hasOwnProperty("children")) {
+                            return;
+                        }
+                    }
+
+                    var position = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
+                    if (position >= 0) {
+                        if (item.parent != undefined) {
+                            item.parent.children.remove(item);
+
+                            if (target == self)
+                                self.controlsFromServer.splice(position, 0, item);
+                            else
+                                target.children.splice(position, 0, item);
+                        } else {
+                            self.controlsFromServer = _.without(self.controlsFromServer, item);
+                            if (target == self)
+                                self.controlsFromServer.splice(position, 0, item);
+                            else
+                                target.children.splice(position, 0, item);
+                        }
+                    }
+                },
+                stop: function(event, ui) {
+                    self.rerenderControls();
+                }
+            }).disableSelection();
         };
 
         self._processControls = function (parent, controls) {
@@ -197,7 +265,7 @@
             if (customControl.hasOwnProperty("offset") && customControl.offset() != "") {
                 offset = "offset" + customControl.offset();
             }
-            return span + " " + offset;
+            return "sortable " + span + " " + offset;
         };
 
         self.searchElement = function (list, id) {
