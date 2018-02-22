@@ -59,7 +59,7 @@
         self.reset = function (data) {
             var element = {
                 name: undefined,
-                style: "",
+                cusotmClass: "",
                 collapsed: false,
                 commands: "",
                 confirm: "",
@@ -106,7 +106,7 @@
                     }
                     case "command": {
                         el.name = obj.name;
-                        el.style = "btn";
+                        el.customClass = "btn";
                         if (obj.commands.indexOf('\n') == -1)
                             el.command = obj.commands;
                         else
@@ -167,7 +167,7 @@
                     case "script":
                         {
                             el.name = obj.name;
-                            el.style = "btn";
+                            el.customClass = "btn";
                             el.script = obj.script;
 
                             if (self.useConfirm()) {

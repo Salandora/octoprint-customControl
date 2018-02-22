@@ -231,7 +231,7 @@
             }
 
             control.name = ko.observable(control.name || "");
-            control.style = ko.observable(control.style || "");
+            control.customClass = ko.observable(control.customClass || "");
 
             control.width = ko.observable(control.hasOwnProperty("width") ? control.width : "2");
             control.offset = ko.observable(control.hasOwnProperty("offset") ? control.offset : "");
@@ -321,7 +321,7 @@
               return;
           }
 
-          element.style("btn " + style);
+          element.customClass("btn " + style);
         }
         self.deleteElement = function (invokedOn, contextParent, selectedMenu) {
             var element = self.searchElement(self.controlsFromServer, contextParent.attr('id'));
