@@ -30,7 +30,7 @@
                 return false;
 
             var inputs = self.element().input()
-            for(var i = 0; i < inputs.length; i++)    
+            for(var i = 0; i < inputs.length; i++)
             {
                 if (inputs[i].hasOwnProperty("slider")) {
                     if (typeof inputs[i].slider == "object")
@@ -59,6 +59,7 @@
         self.reset = function (data) {
             var element = {
                 name: undefined,
+                cusotmClass: "",
                 collapsed: false,
                 commands: "",
                 confirm: "",
@@ -105,6 +106,7 @@
                     }
                     case "command": {
                         el.name = obj.name;
+                        el.customClass = "btn";
                         if (obj.commands.indexOf('\n') == -1)
                             el.command = obj.commands;
                         else
@@ -165,6 +167,7 @@
                     case "script":
                         {
                             el.name = obj.name;
+                            el.customClass = "btn";
                             el.script = obj.script;
 
                             if (self.useConfirm()) {

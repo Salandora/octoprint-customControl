@@ -8,7 +8,6 @@ from octoprint.settings import settings
 
 import octoprint.plugin
 
-
 class CustomControlPlugin(octoprint.plugin.SettingsPlugin,
                           octoprint.plugin.TemplatePlugin,
                           octoprint.plugin.AssetPlugin):

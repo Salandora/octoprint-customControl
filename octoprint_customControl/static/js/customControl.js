@@ -225,12 +225,13 @@
                 else
                     control.collapsed = ko.observable(false);
             }
-            
+
             if (control.hasOwnProperty("input")) {
                 control.input = ko.observableArray(self._processInput(control.input));
             }
 
             control.name = ko.observable(control.name || "");
+            control.customClass = ko.observable(control.customClass || "");
 
             control.width = ko.observable(control.hasOwnProperty("width") ? control.width : "2");
             control.offset = ko.observable(control.hasOwnProperty("offset") ? control.offset : "");
@@ -309,6 +310,18 @@
                     parentElement.children.push(self._processControl(parentElement, ret));
                 });
             }
+        }
+        self.editElementStyle = function (invokedOn, contextParent, selectedMenu, style) {
+          var element = self.searchElement(self.controlsFromServer, contextParent.attr('id'));
+          if (element == undefined) {
+              self._showPopup({
+                  title: gettext("Something went wrong while creating the new Element"),
+                  type: "error"
+              });
+              return;
+          }
+
+          element.customClass("btn " + style);
         }
         self.deleteElement = function (invokedOn, contextParent, selectedMenu) {
             var element = self.searchElement(self.controlsFromServer, contextParent.attr('id'));
@@ -417,7 +430,7 @@
 
                 switch (self.customControlDialogViewModel.type()) {
                     case "container": {
-                        element.name(ret.name);                           
+                        element.name(ret.name);
                         element.layout(ret.layout);
                         element.collapsed(ret.collapsed);
                         break;
@@ -521,6 +534,30 @@
                     self.deleteElement(invokedOn, contextParent, selectedMenu);
                     break;
                 }
+                case "editStyleNormal": {
+                    self.editElementStyle(invokedOn, contextParent, selectedMenu, "");
+                    break;
+                }
+                case "editStylePrimary": {
+                    self.editElementStyle(invokedOn, contextParent, selectedMenu, "btn-primary");
+                    break;
+                }
+                case "editStyleDanger": {
+                    self.editElementStyle(invokedOn, contextParent, selectedMenu, "btn-danger");
+                    break;
+                }
+                case "editStyleWarning": {
+                    self.editElementStyle(invokedOn, contextParent, selectedMenu, "btn-warning");
+                    break;
+                }
+                case "editStyleSuccess": {
+                    self.editElementStyle(invokedOn, contextParent, selectedMenu, "btn-success");
+                    break;
+                }
+                case "editStyleInfo": {
+                    self.editElementStyle(invokedOn, contextParent, selectedMenu, "btn-info");
+                    break;
+                }
                 default: {
                     if (selectedMenu.attr('cmd').startsWith("create")) {
                         switch (selectedMenu.attr('cmd')) {
@@ -553,9 +590,6 @@
             }
         }
 
-        self.editStyle = function (type) {
-        }
-       
         self.recursiveDeleteProperties = function (list) {
             _.each(list, function (element, index, ll) {
                 if (!element.parent || (element.parent.hasOwnProperty("layout") && element.parent.layout() != "horizontal_grid")) {
@@ -604,7 +638,11 @@
         }
         self.onSettingsBeforeSave = function () {
             self.recursiveDeleteProperties(self.controlsFromServer);
-            self.settingsViewModel.settings.plugins.customControl.controls = self.controlsFromServer;
+            if (self.controlsFromServer.length == 0) {
+              self.settingsViewModel.settings.plugins.customControl.controls = "";
+            } else {
+              self.settingsViewModel.settings.plugins.customControl.controls = self.controlsFromServer;
+            }
         }
 
         self.onEventSettingsUpdated = function (payload) {
