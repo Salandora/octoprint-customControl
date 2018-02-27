@@ -638,7 +638,11 @@
         }
         self.onSettingsBeforeSave = function () {
             self.recursiveDeleteProperties(self.controlsFromServer);
-            self.settingsViewModel.settings.plugins.customControl.controls = self.controlsFromServer;
+            if (self.controlsFromServer.length == 0) {
+              self.settingsViewModel.settings.plugins.customControl.controls = "";
+            } else {
+              self.settingsViewModel.settings.plugins.customControl.controls = self.controlsFromServer;
+            }
         }
 
         self.onEventSettingsUpdated = function (payload) {
