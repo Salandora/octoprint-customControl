@@ -32,7 +32,9 @@
         };
 
         self.onSettingsShown = function () {
-            self.requestData();
+            OctoPrint.control.getCustomControls().done(function(response) {
+                self._fromResponse(response);
+            });
         };
 
         self.requestData = function () {
@@ -90,10 +92,10 @@
                     var target = ko.dataFor(this);
                     var item = ko.dataFor(ui.item[0]);
 
-                    if (target == undefined) {
+                    if (target === undefined) {
                         return;
                     } else {
-                        if (target == self) {
+                        if (target === self) {
                             if (!item.hasOwnProperty("children")) {
                                 return;
                             }
@@ -105,23 +107,23 @@
 
                     var position = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
                     if (position >= 0) {
-                        if (item.parent != undefined) {
+                        if (item.parent !== undefined) {
                             item.parent.children.remove(item);
 
-                            if (target == self)
+                            if (target === self)
                                 self.controlsFromServer.splice(position, 0, item);
                             else
                                 target.children.splice(position, 0, item);
                         } else {
                             self.controlsFromServer = _.without(self.controlsFromServer, item);
-                            if (target == self)
+                            if (target === self)
                                 self.controlsFromServer.splice(position, 0, item);
                             else
                                 target.children.splice(position, 0, item);
                         }
                     }
                 },
-                stop: function(event, ui) {
+                stop: function() {
                     self.rerenderControls();
                 }
             }).disableSelection();
@@ -152,19 +154,19 @@
                 return def;
             };
 
-            _.each(list, function (element, index, l) {
+            _.each(list, function (element) {
                 var input = {
                     name: ko.observable(element.name),
                     parameter: ko.observable(element.parameter),
                     default: ko.observable(element.hasOwnProperty("default") ? element.default : undefined)
-                }
+                };
 
                 if (element.hasOwnProperty("slider") && _.isObject(element.slider)) {
                     input.slider = {
                         min: ko.observable(element.slider.min),
                         max: ko.observable(element.slider.max),
                         step: ko.observable(element.slider.step)
-                    }
+                    };
 
                     var defaultValue = attributeToInt(element, "default", attributeToInt(element.slider, "min", 0));
 
@@ -185,7 +187,7 @@
             });
 
             return inputs;
-        }
+        };
         self._processControl = function (parent, control) {
             if (control.processed) {
                 control.id("settingsCustomControl_id" + self.staticID++);
@@ -215,7 +217,7 @@
 
             if (control.hasOwnProperty("children")) {
                 control.children = ko.observableArray(self._processControls(control, control.children));
-                if (!control.hasOwnProperty("layout") || !(control.layout == "vertical" || control.layout == "horizontal" || control.layout == "horizontal_grid"))
+                if (!control.hasOwnProperty("layout") || !(control.layout === "vertical" || control.layout === "horizontal" || control.layout === "horizontal_grid"))
                     control.layout = ko.observable("vertical");
                 else
                     control.layout = ko.observable(control.layout);
@@ -250,19 +252,19 @@
 
         self.displayMode = function (customControl) {
             if (customControl.hasOwnProperty("children")) {
-                return (customControl.hasOwnProperty("name") && customControl.name() != "") ? "settingsCustomControls_containerTemplate_collapsable" : "settingsCustomControls_containerTemplate_nameless";
+                return (customControl.hasOwnProperty("name") && customControl.name() !== "") ? "settingsCustomControls_containerTemplate_collapsable" : "settingsCustomControls_containerTemplate_nameless";
             } else {
                 return "settingsCustomControls_controlTemplate";
             }
-        }
+        };
 
         self.rowCss = function (customControl) {
             var span = "span2";
             var offset = "";
-            if (customControl.hasOwnProperty("width") && customControl.width() != "") {
+            if (customControl.hasOwnProperty("width") && customControl.width() !== "") {
                 span = "span" + customControl.width();
             }
-            if (customControl.hasOwnProperty("offset") && customControl.offset() != "") {
+            if (customControl.hasOwnProperty("offset") && customControl.offset() !== "") {
                 offset = "offset" + customControl.offset();
             }
             return "sortable " + span + " " + offset;
@@ -271,21 +273,21 @@
         self.searchElement = function (list, id) {
             for (var i = 0; i < list.length; i++)
             {
-                if (list[i].id() == id)
+                if (list[i].id() === id)
                     return list[i];
 
                 if (list[i].hasOwnProperty("children")) {
                     var element = self.searchElement(list[i].children(), id);
-                    if (element != undefined)
+                    if (element !== undefined)
                         return element;
                 }
             }
 
             return undefined;
-        }
+        };
 
-        self.createElement = function (invokedOn, contextParent, selectedMenu) {
-            if (contextParent.attr('id') == "base") {
+        self.createElement = function (invokedOn, contextParent) {
+            if (contextParent.attr('id') === "base") {
                 self.customControlDialogViewModel.reset();
 
                 self.customControlDialogViewModel.show(function (ret) {
@@ -295,7 +297,7 @@
             }
             else {
                 var parentElement = self.searchElement(self.controlsFromServer, contextParent.attr('id'));
-                if (parentElement == undefined) {
+                if (parentElement === undefined) {
                     self._showPopup({
                         title: gettext("Something went wrong while creating the new Element"),
                         type: "error"
@@ -309,10 +311,10 @@
                     parentElement.children.push(self._processControl(parentElement, ret));
                 });
             }
-        }
-        self.deleteElement = function (invokedOn, contextParent, selectedMenu) {
+        };
+        self.deleteElement = function (invokedOn, contextParent) {
             var element = self.searchElement(self.controlsFromServer, contextParent.attr('id'));
-            if (element == undefined) {
+            if (element === undefined) {
                 self._showPopup({
                     title: gettext("Something went wrong while creating the new Element"),
                     type: "error"
@@ -321,17 +323,17 @@
             }
 
             showConfirmationDialog("", function (e) {
-                if (element.parent != undefined)
+                if (element.parent !== undefined)
                     element.parent.children.remove(element);
                 else {
                     self.controlsFromServer = _.without(self.controlsFromServer, element);
                     self.rerenderControls();
                 }
             });
-        }
-        self.editElement = function (invokedOn, contextParent, selectedMenu) {
+        };
+        self.editElement = function (invokedOn, contextParent) {
             var element = self.element = self.searchElement(self.controlsFromServer, contextParent.attr('id'));
-            if (element == undefined) {
+            if (element === undefined) {
                 self._showPopup({
                     title: gettext("Something went wrong while creating the new Element"),
                     type: "error"
@@ -342,7 +344,7 @@
             var title = "Edit Container";
             var type = "container";
             var data = {
-                parent: element.parent,
+                parent: element.parent
             };
 
             if (element.hasOwnProperty("name")) {
@@ -425,21 +427,21 @@
                     case "command": {
                         element.name(ret.name);
 
-                        if (ret.command != undefined) {
+                        if (ret.command !== undefined) {
                             element.command = ret.command;
                             delete element.commands;
                         }
-                        if (ret.commands != undefined) {
+                        if (ret.commands !== undefined) {
                             element.commands = ret.commands;
                             delete element.command;
                         }
 
-                        if (ret.confirm != "") {
+                        if (ret.confirm !== "") {
                             element.confirm = ret.confirm;
                         }
 
-                        if (ret.input != undefined) {
-                            _.each(ret.input, function (element, index, list) {
+                        if (ret.input !== undefined) {
+                            _.each(ret.input, function (element, index) {
                                 data.input[index] = ko.mapping.toJS(element);
                             });
 
@@ -480,11 +482,11 @@
                         element.name(ret.name);
                         element.script = ret.script;
 
-                        if (ret.confirm != "") {
+                        if (ret.confirm !== "") {
                             element.confirm = ret.confirm;
                         }
 
-                        if (ret.input != undefined) {
+                        if (ret.input !== undefined) {
                             element.input(self._processInput(ret.input));
                         }
                         else
@@ -500,15 +502,15 @@
                     }
                 }
 
-                if (element.parent && element.parent.layout() == "horizontal_grid") {
-                    if (ret.width != undefined && ret.width != "")
+                if (element.parent && element.parent.layout() === "horizontal_grid") {
+                    if (ret.width !== undefined && ret.width !== "")
                         element.width(ret.width);
 
-                    if (ret.offset != undefined && ret.offset != "")
+                    if (ret.offset !== undefined && ret.offset !== "")
                         element.offset(ret.offset);
                 }
             });
-        }
+        };
 
         self.controlContextMenu = function (invokedOn, contextParent, selectedMenu)
         {
@@ -551,19 +553,19 @@
                     break;
                 }
             }
-        }
+        };
 
         self.editStyle = function (type) {
-        }
+        };
        
         self.recursiveDeleteProperties = function (list) {
-            _.each(list, function (element, index, ll) {
-                if (!element.parent || (element.parent.hasOwnProperty("layout") && element.parent.layout() != "horizontal_grid")) {
+            _.each(list, function (element) {
+                if (!element.parent || (element.parent.hasOwnProperty("layout") && element.parent.layout() !== "horizontal_grid")) {
                     delete element.width;
                     delete element.offset;
                 }
 
-                if (element.default == "")
+                if (element.default === "")
                     delete element.default;
 
                 delete element.id;
@@ -576,19 +578,19 @@
 
                 if (element.hasOwnProperty("input")) {
                     _.each(element.input(), function (e, i, l) {
-                        if (e.default == "")
+                        if (e.default === "")
                             delete e.default;
 
                         delete e.value;
                     });
                 }
 
-                if (element.hasOwnProperty("width") && element.width() == "")
+                if (element.hasOwnProperty("width") && element.width() === "")
                     delete element.width;
-                if (element.hasOwnProperty("offset") && element.offset() == "")
+                if (element.hasOwnProperty("offset") && element.offset() === "")
                     delete element.offset;
 
-                if (!element.hasOwnProperty("name") || element.name() == "") {
+                if (!element.hasOwnProperty("name") || element.name() === "") {
                     delete element.name;
                     delete element.collapsed;
                 }
@@ -601,13 +603,13 @@
                     self.recursiveDeleteProperties(element.children());
                 }
             });
-        }
+        };
         self.onSettingsBeforeSave = function () {
             self.recursiveDeleteProperties(self.controlsFromServer);
             self.settingsViewModel.settings.plugins.customControl.controls = self.controlsFromServer;
-        }
+        };
 
-        self.onEventSettingsUpdated = function (payload) {
+        self.onEventSettingsUpdated = function () {
             self.requestData();
         }
     }

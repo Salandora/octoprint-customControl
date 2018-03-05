@@ -12,11 +12,6 @@ import octoprint.plugin
 class CustomControlPlugin(octoprint.plugin.SettingsPlugin,
                           octoprint.plugin.TemplatePlugin,
                           octoprint.plugin.AssetPlugin):
-    def get_settings_defaults(self):
-        return dict(
-            controls=[]
-        )
-
     def get_template_configs(self):
         if "editorcollection" in self._plugin_manager.enabled_plugins:
             return [
@@ -28,9 +23,13 @@ class CustomControlPlugin(octoprint.plugin.SettingsPlugin,
                 dict(type="settings", template="customControl_hookedsettings.jinja2", custom_bindings=True)
             ]
 
+    def on_settings_load(self):
+        return dict(
+            controls=settings().get(["controls"])
+        )
+
     def on_settings_save(self, data):
-        s = settings()
-        s.set(["controls"], data["controls"])
+        settings().set(["controls"], data["controls"])
 
     def get_assets(self):
         return dict(
