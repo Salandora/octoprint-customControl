@@ -120,13 +120,13 @@ class CleanCommand(Command):
 
         # build folder
         if os.path.exists('build'):
-            print "Deleting build directory"
+            print("Deleting build directory")
             shutil.rmtree('build')
 
         # eggs
         eggs = glob.glob("*.egg-info")
         for egg in eggs:
-            print "Deleting %s directory" % egg
+            print("Deleting %s directory" % egg)
             shutil.rmtree(egg)
 
         # pyc files
@@ -135,11 +135,11 @@ class CleanCommand(Command):
                 return
             if len(os.listdir(path)) == 0:
                 shutil.rmtree(path)
-                print "Deleted %s since it was empty" % path
+                print("Deleted %s since it was empty" % path)
 
         def delete_file(path):
             os.remove(path)
-            print "Deleted %s" % path
+            print("Deleted %s" % path)
 
         import fnmatch
         _recursively_handle_files(
@@ -155,11 +155,11 @@ class CleanCommand(Command):
                 return
             if len(os.listdir(path)) == 0:
                 shutil.rmtree(path)
-                print "Deleted %s since it was empty" % path
+                print("Deleted %s since it was empty" % path)
 
         def delete_file(path):
             os.remove(path)
-            print "Deleted %s" % path
+            print("Deleted %s" % path)
 
         import fnmatch
         _recursively_handle_files(
