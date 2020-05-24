@@ -38,7 +38,7 @@ class CustomControlPlugin(octoprint.plugin.SettingsPlugin,
                 "js/customControl.js",
                 "js/customControlDialog.js",
             ],
-            css=["css/customControls.css"],
+            css=["css/customControls.min.css"],
             less=["less/customControls.less"]
         )
 
