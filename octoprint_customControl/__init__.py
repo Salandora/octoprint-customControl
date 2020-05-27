@@ -4,14 +4,13 @@ from __future__ import absolute_import
 __author__ = "Marc Hannappel <salandora@gmail.com>"
 __license__ = 'GNU Affero General Public License http://www.gnu.org/licenses/agpl.html'
 
-from octoprint.settings import settings
-
 import octoprint.plugin
 
 
 class CustomControlPlugin(octoprint.plugin.SettingsPlugin,
                           octoprint.plugin.TemplatePlugin,
                           octoprint.plugin.AssetPlugin):
+
     def get_template_configs(self):
         if "editorcollection" in self._plugin_manager.enabled_plugins:
             return [
@@ -25,11 +24,13 @@ class CustomControlPlugin(octoprint.plugin.SettingsPlugin,
 
     def on_settings_load(self):
         return dict(
-            controls=settings().get(["controls"])
+            controls=self._settings.global_get(["controls"])
         )
 
     def on_settings_save(self, data):
-        settings().set(["controls"], data["controls"])
+        if len(data["controls"]) > 0:
+            self._logger.info("settings changed...saving global value")
+            self._settings.global_set(["controls"], data["controls"])
 
     def get_assets(self):
         return dict(
